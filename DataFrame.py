@@ -10,6 +10,11 @@ class DataFrame(object):
         self.rows = kwargs.get("rows", [])
 
     @staticmethod
+    def read_matrix(head, matrix):
+        assert len(head) == len(matrix[0])
+        return DataFrame(head=head, rows=matrix)
+
+    @staticmethod
     def read_csv(csv_path):
         with open(csv_path) as file:
             head = file.readline().strip().split(",")
@@ -26,6 +31,10 @@ class DataFrame(object):
 
     def empty(self):
         return self.__class__(name=self.name, date=self.date, head=self.head, rows=[])
+
+    def append(self, row):
+        assert len(row) == len(self.head)
+        self.rows.append(row)
 
     def print(self, n=-1):
         print(join(self.head, "\t"))
@@ -72,11 +81,11 @@ class DataFrame(object):
                 self.field = field
                 return self
 
-            def _compare(self, opt, value):
+            def equal(self, value):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
-                    if eval("{}{}{}".format(r[ind], opt, value)):
+                    if r[ind] == value:
                         selected_rows.append(r)
 
                 if len(selected_rows) == 0:
@@ -86,20 +95,55 @@ class DataFrame(object):
                               date=self.df.date)
                 return self
 
-            def equal(self, value):
-                return self._compare("==", value)
-
             def less(self, value):
-                return self._compare("<", value)
+                selected_rows = []
+                ind = self.df.head.index(self.field)
+                for r in self.df.rows:
+                    if r[ind] < value:
+                        selected_rows.append(r)
+
+                if len(selected_rows) == 0:
+                    raise Exception("no row selected")
+
+                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
+                              date=self.df.date)
+                return self
 
             def greater(self, value):
-                return self._compare(">", value)
+                selected_rows = []
+                ind = self.df.head.index(self.field)
+                for r in self.df.rows:
+                    if r[ind] > value:
+                        selected_rows.append(r)
+
+                if len(selected_rows) == 0:
+                    raise Exception("no row selected")
+
+                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
+                              date=self.df.date)
+                return self
 
             def between(self, low, high):
                 return self.greater(low).less(high)
 
             def operator(self, opt, value):
-                return self._compare(opt, value)
+                selected_rows = []
+                ind = self.df.head.index(self.field)
+                for r in self.df.rows:
+                    if type(value) == str:
+                        expr = "\"{}\"{}\"{}\""
+                    else:
+                        expr = "{}{}{}"
+
+                    if eval(expr.format(r[ind], opt, value)):
+                        selected_rows.append(r)
+
+                if len(selected_rows) == 0:
+                    raise Exception("no row selected")
+
+                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
+                              date=self.df.date)
+                return self
 
             def prefix(self, pattern):
                 selected_rows = []
