@@ -152,5 +152,4 @@ class DataFrame(object):
 
 if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
-    df.map("description", lambda x: x.split("_")[0])
     df.select().where("value").between(67, 70.5)().sort("value").print(5).sort("value", reverse=True).print(5)
