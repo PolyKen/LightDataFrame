@@ -53,6 +53,13 @@ class DataFrame(object):
         self.rows.extend(other.rows)
         return self
 
+    def map(self, column_name, func):
+        if column_name not in self.head:
+            raise KeyError
+
+        self[column_name] = list(map(func, self[column_name]))
+        return self
+
     def select(self):
         cls = self.__class__
 
@@ -133,11 +140,17 @@ class DataFrame(object):
 
     def __setitem__(self, column_name, column_list):
         assert len(self.rows) == len(column_list), AssertionError("{}, {}".format(len(self.rows), len(column_list)))
-        self.head.append(column_name)
-        for i in range(len(self.rows)):
-            self.rows[i].append(column_list[i])
+        if column_name not in self.head:
+            self.head.append(column_name)
+            for i in range(len(self.rows)):
+                self.rows[i].append(column_list[i])
+        else:
+            ind = self.head.index(column_name)
+            for i in range(len(self.rows)):
+                self.rows[i][ind] = column_list[i]
 
 
 if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
+    df.map("description", lambda x: x.split("_")[0])
     df.select().where("value").between(67, 70.5)().sort("value").print(5).sort("value", reverse=True).print(5)
