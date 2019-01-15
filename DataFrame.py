@@ -65,11 +65,11 @@ class DataFrame(object):
                 self.field = field
                 return self
 
-            def equal(self, value):
+            def _compare(self, opt, value):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
-                    if r[ind] == value:
+                    if eval("{}{}{}".format(r[ind], opt, value)):
                         selected_rows.append(r)
 
                 if len(selected_rows) == 0:
@@ -79,7 +79,22 @@ class DataFrame(object):
                               date=self.df.date)
                 return self
 
-            def like(self, pattern):
+            def equal(self, value):
+                return self._compare("==", value)
+
+            def less(self, value):
+                return self._compare("<", value)
+
+            def greater(self, value):
+                return self._compare(">", value)
+
+            def between(self, low, high):
+                return self.greater(low).less(high)
+
+            def operator(self, opt, value):
+                return self._compare(opt, value)
+
+            def prefix(self, pattern):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
@@ -121,3 +136,8 @@ class DataFrame(object):
         self.head.append(column_name)
         for i in range(len(self.rows)):
             self.rows[i].append(column_list[i])
+
+
+if __name__ == "__main__":
+    df = DataFrame.read_csv(csv_path='test.csv')
+    df.select().where("value").between(67, 70.5)().sort("value").print(5).sort("value", reverse=True).print(5)
