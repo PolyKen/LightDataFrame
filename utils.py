@@ -3,6 +3,7 @@ import requests
 import asyncio
 import time
 import os
+import datetime
 
 
 color_dict = {"red": "31", "green": "32",
@@ -13,6 +14,10 @@ month_size_dict = {"1": 31, "2": 28, "3": 31, "4": 30, "5": 31, "6": 30, "7": 31
 
 def join(string, pattern=","):
     return reduce(lambda x, y: "{}{}{}".format(x, pattern, y), string)
+
+
+def now(fmt):
+    return datetime.datetime.now().strftime(fmt)
 
 
 def time2float(time_str):

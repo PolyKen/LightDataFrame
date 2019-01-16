@@ -11,7 +11,7 @@ class DataFrame(object):
 
     @staticmethod
     def read_matrix(head, matrix):
-        assert len(head) == len(matrix[0])
+        assert len(head) == len(matrix[0]), Exception("{}, {}".format(head, matrix[0]))
         return DataFrame(head=head, rows=matrix)
 
     @staticmethod
@@ -28,6 +28,15 @@ class DataFrame(object):
             file.write(join(self.head) + "\n")
             for r in self.rows:
                 file.write(join(r) + "\n")
+
+    def to_dict_list(self):
+        dict_list = []
+        for row in self.rows:
+            d = {}
+            for i in range(len(self.head)):
+                d[self.head[i]] = row[i]
+            dict_list.append(d)
+        return dict_list
 
     def empty(self):
         return self.__class__(name=self.name, date=self.date, head=self.head, rows=[])
@@ -85,8 +94,16 @@ class DataFrame(object):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
-                    if r[ind] == value:
-                        selected_rows.append(r)
+                    try:
+                        if r[ind] == value:
+                            selected_rows.append(r)
+                    except TypeError:
+                        if type(value) == str:
+                            if str(r[ind]) == value:
+                                selected_rows.append(r)
+                        elif type(value) == int or type(value) == float:
+                            if float(r[ind]) == value:
+                                selected_rows.append(r)
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -99,8 +116,16 @@ class DataFrame(object):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
-                    if r[ind] < value:
-                        selected_rows.append(r)
+                    try:
+                        if r[ind] < value:
+                            selected_rows.append(r)
+                    except TypeError:
+                        if type(value) == str:
+                            if str(r[ind]) < value:
+                                selected_rows.append(r)
+                        elif type(value) == int or type(value) == float:
+                            if float(r[ind]) < value:
+                                selected_rows.append(r)
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -113,8 +138,16 @@ class DataFrame(object):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
-                    if r[ind] > value:
-                        selected_rows.append(r)
+                    try:
+                        if r[ind] > value:
+                            selected_rows.append(r)
+                    except TypeError:
+                        if type(value) == str:
+                            if str(r[ind]) > value:
+                                selected_rows.append(r)
+                        elif type(value) == int or type(value) == float:
+                            if float(r[ind]) > value:
+                                selected_rows.append(r)
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -197,3 +230,4 @@ class DataFrame(object):
 if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df.select().where("value").between(67, 70.5)().sort("value").print(5).sort("value", reverse=True).print(5)
+    print(df.select().where("value").between(69, 70)().sort("value").to_dict_list()[0])
