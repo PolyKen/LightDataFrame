@@ -70,15 +70,15 @@ def green(string):
     return colorize(string, "green")
 
 
-def async_run_tasks(coro_func_list, para_list):
+def async_run_tasks(coroutine_list, params_list):
     loop = asyncio.get_event_loop()
     tasks = []
-    if type(coro_func_list) is not list:
-        coro_func_list = [coro_func_list] * len(para_list)
-    for i, func in enumerate(coro_func_list):
-        para = para_list[i]
-        coro = func(*para)
-        task = loop.create_task(coro)
+    if type(coroutine_list) is not list:
+        coroutine_list = [coroutine_list] * len(params_list)
+    for i, func in enumerate(coroutine_list):
+        para = params_list[i]
+        coroutine = func(*para)
+        task = loop.create_task(coroutine)
         tasks.append(task)
     print("> Running {} tasks:".format(len(tasks)))
     loop.run_until_complete(asyncio.wait(tasks))
@@ -111,8 +111,8 @@ class RequestHandler(object):
     def __init__(self, host, port, company):
         self.url = 'http://{}:{}/?/{}'.format(host, port, company).replace('?', '{}')
 
-    def get(self, service, param):
-        return requests.get(self.url.format(service), param)
+    def get(self, service, params):
+        return requests.get(url=self.url.format(service), params=params)
 
     @retry(interval=1, repeat_times=3)
     async def async_get(self, service, params):
@@ -121,6 +121,8 @@ class RequestHandler(object):
         r = await loop.run_in_executor(None, lambda p: requests.get(url, p), params)
         if r.status_code == 200:
             return r
+        else:
+            raise ConnectionError
 
 
 class Renderer(object):
