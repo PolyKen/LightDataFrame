@@ -124,8 +124,7 @@ class RequestHandler(object):
     async def async_get(self, service, params):
         loop = asyncio.get_event_loop()
         url = self.url.format(service)
-        url += "?limit={}&name={}".format(params['limit'], params['name'])
-        r = await loop.run_in_executor(None, requests.get, url)
+        r = await loop.run_in_executor(None, lambda p: requests.get(url, p), params)
         if r.status_code == 200:
             return r
 
@@ -157,6 +156,7 @@ class Renderer(object):
         foot = "</table></body></html>"
 
         path_lst = [os.path.join(path, e + '.png') for e in render_lst]
+        print("render list: {}".format(render_lst))
 
         row_lst = []
         idx = 0
