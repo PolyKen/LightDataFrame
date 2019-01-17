@@ -1,4 +1,4 @@
-from utils import join
+from utils import join, yellow, green
 from re import match, search
 
 
@@ -46,7 +46,7 @@ class DataFrame(object):
         self.rows.append(row)
 
     def print(self, n=-1):
-        print(join(self.head, "\t"))
+        print(green(join(self.head, "\t")))
         i = 0
         for r in self.rows:
             if i == n:
@@ -305,7 +305,7 @@ class DataFrame(object):
             def __call__(self):
                 all_df = self.df + self.keep
                 if len(all_df.rows) == 0:
-                    print("no row selected")
+                    print(yellow("no row selected"))
                 return all_df
 
         return Selector(self)
