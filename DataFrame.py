@@ -124,9 +124,11 @@ class DataFrame(object):
             @timer
             def wrapper(*args, **kwargs):
                 wrapper.__name__ = func.__name__
+                total_num = len(args[0].selected)
                 res = func(*args, **kwargs)
                 num_selected = len(args[0].selected)
-                print("{}: {} rows selected".format(func.__name__, num_selected))
+                num_kept = len(args[0].kept)
+                print("[{}] {} out of {} row(s) selected, {} row(s) kept".format(func.__name__, num_selected, total_num, num_kept))
                 return res
 
             return wrapper
@@ -134,7 +136,7 @@ class DataFrame(object):
         class Selector(object):
             def __init__(self, df, field=None):
                 self.all_df = set(range(len(df.rows)))
-                self.keep = set()
+                self.kept = set()
                 self.selected = set(range(len(df.rows)))
                 self.df = df
                 self.field = field
@@ -144,17 +146,19 @@ class DataFrame(object):
                 assert self.field == other.field and self.complement == other.complement
                 assert self.df == other.df
 
-                self.keep.union(other.keep)
+                self.kept.union(other.keep)
                 self.selected.union(other.selected)
                 return self
 
             def __call__(self):
                 all_df = self.df.empty()
-                self.selected.union(self.keep)
+                self.selected = self.selected.union(self.kept)
                 for i in self.selected:
                     all_df.append(self.df.rows[i])
                 if len(all_df.rows) == 0:
                     print(yellow("no row selected"))
+                else:
+                    print(green("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows))))
                 return all_df
 
             def empty(self):
@@ -169,8 +173,8 @@ class DataFrame(object):
                 return self
 
             def Or(self):
-                self.keep.union(self.selected)
-                self.selected = self.all_df.difference(self.keep)
+                self.kept = self.kept.union(self.selected)
+                self.selected = self.all_df.difference(self.kept)
                 return self
 
             @detail
@@ -379,5 +383,5 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    # df.select().where("value").between(10, 79).greater(0.1)().sort("value", reverse=True).print(5)
-    df.select().where("value").less(69.8).where("description").postfix("L3-01").where("sp_value").equal(70)().sort("value").print()
+    df.select().where("value").Not().between(10, 79)().sort("value").print(5)
+    # df.select().where("value").less(69.8).where("description").postfix("L3-01").where("sp_value").equal(70)().sort("value").print()
