@@ -139,8 +139,7 @@ class DataFrame(object):
 
             def __call__(self):
                 all_df = self.df.empty()
-                for i in self.keep:
-                    all_df.append(self.df.rows[i])
+                self.selected.union(self.keep)
                 for i in self.selected:
                     all_df.append(self.df.rows[i])
                 if len(all_df.rows) == 0:
@@ -355,5 +354,5 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("value").Not().between(10, 79).greater(1)().sort("value").print(5)
+    df.select().where("value").Not().between(10, 79).greater(0.1)().sort("value").print(5).sort("value", reverse=True).print(5)
     df.select().where("description").postfix("L3-01").Or().where("description").prefix("AHU-R-B2-02")().print(5)
