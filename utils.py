@@ -82,30 +82,20 @@ def async_run_tasks(coro_func_list, para_list):
     return tasks_results
 
 
-def retry(interval=10, times=3):
+def retry(interval=10, repeat_times=3):
     def wrapper2(func):
         def wrapper(*args, **kwargs):
-            if times == -1:
-                while True:
-                    try:
-                        res = func(*args, **kwargs)
-                        return res
-                    except Exception as e:
-                        print(red("Exception occured: " + str(e)))
-                        print(red("try again"))
-                        time.sleep(interval)
-                        continue
-            else:
-                for i in range(times):
-                    try:
-                        res = func(*args, **kwargs)
-                        return res
-                    except Exception as e:
-                        print(red("Exception occured: " + str(e)))
-                        print(red("try again"))
-                        time.sleep(interval)
-                        continue
-                raise ConnectionError
+            repeat = repeat_times
+            while repeat != 0:
+                try:
+                    res = func(*args, **kwargs)
+                    return res
+                except Exception as e:
+                    print(red("Exception occured: " + str(e)))
+                    print(red("try again"))
+                    time.sleep(interval)
+                    repeat -= 1
+            raise ConnectionError
 
         wrapper.__name__ = func.__name__
         return wrapper
@@ -120,7 +110,7 @@ class RequestHandler(object):
     def get(self, service, param):
         return requests.get(self.url.format(service), param)
 
-    @retry(interval=1, times=3)
+    @retry(interval=1, repeat_times=3)
     async def async_get(self, service, params):
         loop = asyncio.get_event_loop()
         url = self.url.format(service)
@@ -133,17 +123,20 @@ class Renderer(object):
     def __init__(self, output_path):
         self.output_path = output_path
 
-    def image(self, img_path):
+    @staticmethod
+    def image(img_path):
         return '<td><img src="' + img_path + '" alt="No Data"></td>'
 
-    def row(self, cell_lst):
+    @staticmethod
+    def row(cell_lst):
         ret = "<tr>"
         for cell in cell_lst:
             ret += cell
         ret += "</tr>\n"
         return ret
 
-    def table(self, row_lst):
+    @staticmethod
+    def table(row_lst):
         tbl = ""
         for r in row_lst:
             tbl += r
@@ -172,3 +165,4 @@ class Renderer(object):
 
         with open(self.output_path, 'w') as the_file:
             the_file.write(head + body + foot)
+
