@@ -46,15 +46,38 @@ class DataFrame(object):
         self.rows.append(row)
 
     def print(self, n=-1):
-        print(green(join(self.head, "\t")))
-        i = 0
-        for r in self.rows:
-            if i == n:
-                break
-            else:
-                i += 1
-            print(join(r, "\t"))
-        print()
+        if len(self.rows) == 0:
+            print(green(join(self.head, "\t")))
+        else:
+            def get_col_width(lst):
+                return max(list(map(lambda x: len(str(x)), lst)))
+
+            col_width_list = list(map(lambda col_name: get_col_width(self[col_name]), self.head))
+
+            delta_list = []
+            for i in range(len(self.head)):
+                delta = col_width_list[i] - len(self.head[i])
+                delta_list.append(delta)
+
+            head = ""
+            for index, col_name in enumerate(self.head):
+                head += col_name
+                head += " " * max(delta_list[index] + 2, 2)
+            print(green(head))
+
+            i = 0
+            for r in self.rows:
+                if i == n:
+                    break
+                else:
+                    i += 1
+                _row = ""
+                for j in range(len(self.head)):
+                    head_len = len(self.head[j] + " " * max(delta_list[j] + 2, 2))
+                    space_num = head_len - len(str(r[j]))
+                    _row += str(r[j]) + " " * space_num
+                print(_row)
+            print()
         return self
 
     def __getitem__(self, key):
