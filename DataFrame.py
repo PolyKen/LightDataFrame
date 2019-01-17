@@ -71,6 +71,11 @@ class DataFrame(object):
         self.rows.extend(other.rows)
         return self
 
+    def __sub__(self, other):
+        assert self.head == other.head
+        self.rows = [row for row in self.rows if row not in other.rows]
+        return self
+
     def map(self, column_name, func):
         if column_name not in self.head:
             raise KeyError
@@ -85,25 +90,49 @@ class DataFrame(object):
             def __init__(self, df, field=None):
                 self.df = df
                 self.field = field
+                self.complement = False
+
+            def empty(self):
+                return Selector(df=self.df.empty(), field=self.field)
+
+            def __add__(self, other):
+                assert self.field == other.field and self.complement == other.complement
+                self.df += other.df
+                return self
 
             def where(self, field):
                 self.field = field
                 return self
 
+            def is_not(self):
+                self.complement = True
+                return self
+
             def equal(self, value):
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     try:
                         if r[ind] == value:
                             selected_rows.append(r)
+                        else:
+                            discarded_rows.append(r)
                     except TypeError:
                         if type(value) == str:
                             if str(r[ind]) == value:
                                 selected_rows.append(r)
+                            else:
+                                discarded_rows.append(r)
                         elif type(value) == int or type(value) == float:
                             if float(r[ind]) == value:
                                 selected_rows.append(r)
+                            else:
+                                discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -114,18 +143,29 @@ class DataFrame(object):
 
             def less(self, value):
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     try:
                         if r[ind] < value:
                             selected_rows.append(r)
+                        else:
+                            discarded_rows.append(r)
                     except TypeError:
                         if type(value) == str:
                             if str(r[ind]) < value:
                                 selected_rows.append(r)
+                            else:
+                                discarded_rows.append(r)
                         elif type(value) == int or type(value) == float:
                             if float(r[ind]) < value:
                                 selected_rows.append(r)
+                            else:
+                                discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -136,18 +176,29 @@ class DataFrame(object):
 
             def greater(self, value):
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     try:
                         if r[ind] > value:
                             selected_rows.append(r)
+                        else:
+                            discarded_rows.append(r)
                     except TypeError:
                         if type(value) == str:
                             if str(r[ind]) > value:
                                 selected_rows.append(r)
+                            else:
+                                discarded_rows.append(r)
                         elif type(value) == int or type(value) == float:
                             if float(r[ind]) > value:
                                 selected_rows.append(r)
+                            else:
+                                discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -157,10 +208,52 @@ class DataFrame(object):
                 return self
 
             def between(self, low, high):
-                return self.greater(low).less(high)
+                if self.complement:
+                    self.complement = False
+                    try:
+                        less_low = self.less(low)
+                    except Exception as e:
+                        if str(e) == "no row selected":
+                            less_low = self.empty()
+                        else:
+                            raise e
+
+                    try:
+                        equal_low = self.equal(low)
+                    except Exception as e:
+                        if str(e) == "no row selected":
+                            equal_low = self.empty()
+                        else:
+                            raise e
+
+                    try:
+                        equal_high = self.equal(high)
+                    except Exception as e:
+                        if str(e) == "no row selected":
+                            equal_high = self.empty()
+                        else:
+                            raise e
+
+                    try:
+                        greater_high = self.greater(high)
+                    except Exception as e:
+                        if str(e) == "no row selected":
+                            greater_high = self.empty()
+                        else:
+                            raise e
+
+                    sel = less_low + equal_low + equal_high + greater_high
+
+                    if len(sel.df.rows) == 0:
+                        raise Exception("no row selected")
+
+                    return sel
+                else:
+                    return self.greater(low).less(high)
 
             def operator(self, opt, value):
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     if type(value) == str:
@@ -170,6 +263,12 @@ class DataFrame(object):
 
                     if eval(expr.format(r[ind], opt, value)):
                         selected_rows.append(r)
+                    else:
+                        discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -180,10 +279,17 @@ class DataFrame(object):
 
             def prefix(self, pattern):
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     if match(pattern, r[ind]):
                         selected_rows.append(r)
+                    else:
+                        discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -195,11 +301,19 @@ class DataFrame(object):
             def postfix(self, pattern):
                 if pattern[-1] != "$":
                     pattern += "$"
+
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     if search(pattern, r[ind]):
                         selected_rows.append(r)
+                    else:
+                        discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -210,10 +324,17 @@ class DataFrame(object):
 
             def contain(self, substring):
                 selected_rows = []
+                discarded_rows = []
                 ind = self.df.head.index(self.field)
                 for r in self.df.rows:
                     if search(substring, r[ind]):
                         selected_rows.append(r)
+                    else:
+                        discarded_rows.append(r)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
 
                 if len(selected_rows) == 0:
                     raise Exception("no row selected")
@@ -245,6 +366,7 @@ class DataFrame(object):
 
 if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
-    df.select().where("value").between(67, 70.5)().sort("value").print(5).sort("value", reverse=True).print(5)
-    print(df.select().where("value").between(69, 70)().sort("value").to_dict_list()[0])
+    df["value"] = list(map(float, df["value"]))
+    df["sp_value"] = list(map(float, df["sp_value"]))
+    df.select().where("value").is_not().between(67, 70.5)().sort("value", reverse=True).print(5)
     df.select().where("description").postfix("01")().print(5)
