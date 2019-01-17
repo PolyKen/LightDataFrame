@@ -71,6 +71,13 @@ class DataFrame(object):
         self.rows.extend(other.rows)
         return self
 
+    def merge(self, other):
+        assert self.head == other.head
+        for row in other.rows:
+            if row not in self.rows:
+                self.rows.append(row)
+        return self
+
     def __sub__(self, other):
         assert self.head == other.head
         self.rows = [row for row in self.rows if row not in other.rows]
@@ -88,6 +95,8 @@ class DataFrame(object):
 
         class Selector(object):
             def __init__(self, df, field=None):
+                self.all_df = cls(head=df.head, rows=df.rows, name=df.name, date=df.date)
+                self.keep = df.empty()
                 self.df = df
                 self.field = field
                 self.complement = False
@@ -97,15 +106,23 @@ class DataFrame(object):
 
             def __add__(self, other):
                 assert self.field == other.field and self.complement == other.complement
-                self.df += other.df
+                assert self.all_df == other.all_df
+
+                self.df.merge(other.df)
+                self.keep.merge(other.keep)
                 return self
 
             def where(self, field):
                 self.field = field
                 return self
 
-            def is_not(self):
+            def Not(self):
                 self.complement = True
+                return self
+
+            def Or(self):
+                self.keep += self.df
+                self.df = self.all_df
                 return self
 
             def equal(self, value):
@@ -133,9 +150,6 @@ class DataFrame(object):
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
-
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
 
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
@@ -167,9 +181,6 @@ class DataFrame(object):
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
-
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
                 return self
@@ -200,9 +211,6 @@ class DataFrame(object):
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
-
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
                 return self
@@ -210,44 +218,7 @@ class DataFrame(object):
             def between(self, low, high):
                 if self.complement:
                     self.complement = False
-                    try:
-                        less_low = self.less(low)
-                    except Exception as e:
-                        if str(e) == "no row selected":
-                            less_low = self.empty()
-                        else:
-                            raise e
-
-                    try:
-                        equal_low = self.equal(low)
-                    except Exception as e:
-                        if str(e) == "no row selected":
-                            equal_low = self.empty()
-                        else:
-                            raise e
-
-                    try:
-                        equal_high = self.equal(high)
-                    except Exception as e:
-                        if str(e) == "no row selected":
-                            equal_high = self.empty()
-                        else:
-                            raise e
-
-                    try:
-                        greater_high = self.greater(high)
-                    except Exception as e:
-                        if str(e) == "no row selected":
-                            greater_high = self.empty()
-                        else:
-                            raise e
-
-                    sel = less_low + equal_low + equal_high + greater_high
-
-                    if len(sel.df.rows) == 0:
-                        raise Exception("no row selected")
-
-                    return sel
+                    return self.less(low).Or().equal(low).Or().equal(high).Or().greater(high)
                 else:
                     return self.greater(low).less(high)
 
@@ -270,9 +241,6 @@ class DataFrame(object):
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
-
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
                 return self
@@ -290,9 +258,6 @@ class DataFrame(object):
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
-
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
 
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
@@ -315,9 +280,6 @@ class DataFrame(object):
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
-
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
                 return self
@@ -336,15 +298,15 @@ class DataFrame(object):
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                if len(selected_rows) == 0:
-                    raise Exception("no row selected")
-
                 self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
                               date=self.df.date)
                 return self
 
             def __call__(self):
-                return self.df
+                all_df = self.df + self.keep
+                if len(all_df.rows) == 0:
+                    print("no row selected")
+                return all_df
 
         return Selector(self)
 
@@ -368,5 +330,5 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("value").is_not().between(67, 70.5)().sort("value", reverse=True).print(5)
-    df.select().where("description").postfix("01")().print(5)
+    df.select().where("value").Not().between(10, 79)().sort("value").print(5).sort("value", reverse=True).print(5)
+    df.select().where("description").postfix("L3-01").Or().where("description").prefix("AHU-R-B2-02")().print(5)
