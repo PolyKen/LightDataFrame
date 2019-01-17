@@ -120,11 +120,22 @@ class DataFrame(object):
     def select(self):
         cls = self.__class__
 
+        def detail(func):
+            @timer
+            def wrapper(*args, **kwargs):
+                wrapper.__name__ = func.__name__
+                res = func(*args, **kwargs)
+                num_selected = len(args[0].selected)
+                print("{}: {} rows selected".format(func.__name__, num_selected))
+                return res
+
+            return wrapper
+
         class Selector(object):
             def __init__(self, df, field=None):
                 self.all_df = set(range(len(df.rows)))
                 self.keep = set()
-                self.selected = set()
+                self.selected = set(range(len(df.rows)))
                 self.df = df
                 self.field = field
                 self.complement = False
@@ -159,14 +170,16 @@ class DataFrame(object):
 
             def Or(self):
                 self.keep.union(self.selected)
-                self.selected = set()
+                self.selected = self.all_df.difference(self.keep)
                 return self
 
+            @detail
             def equal(self, value):
                 selected_rows = set()
                 discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for i, r in enumerate(self.df.rows):
+                for i in self.selected:
+                    r = self.df.rows[i]
                     try:
                         if r[ind] == value:
                             selected_rows.add(i)
@@ -191,11 +204,13 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
             def less(self, value):
                 selected_rows = set()
                 discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for i, r in enumerate(self.df.rows):
+                for i in self.selected:
+                    r = self.df.rows[i]
                     try:
                         if r[ind] < value:
                             selected_rows.add(i)
@@ -220,11 +235,13 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
             def greater(self, value):
                 selected_rows = set()
                 discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for i, r in enumerate(self.df.rows):
+                for i in self.selected:
+                    r = self.df.rows[i]
                     try:
                         if r[ind] > value:
                             selected_rows.add(i)
@@ -249,6 +266,7 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
             def between(self, low, high):
                 if self.complement:
                     self.complement = False
@@ -256,6 +274,7 @@ class DataFrame(object):
                 else:
                     return self.greater(low).less(high)
 
+            @detail
             def operator(self, opt, value):
                 selected_rows = set()
                 discarded_rows = set()
@@ -278,11 +297,13 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
             def prefix(self, pattern):
                 selected_rows = set()
                 discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for i, r in enumerate(self.df.rows):
+                for i in self.selected:
+                    r = self.df.rows[i]
                     if match(pattern, r[ind]):
                         selected_rows.add(i)
                     else:
@@ -295,6 +316,7 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
             def postfix(self, pattern):
                 if pattern[-1] != "$":
                     pattern += "$"
@@ -302,7 +324,8 @@ class DataFrame(object):
                 selected_rows = set()
                 discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for i, r in enumerate(self.df.rows):
+                for i in self.selected:
+                    r = self.df.rows[i]
                     if search(pattern, r[ind]):
                         selected_rows.add(i)
                     else:
@@ -315,11 +338,13 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
             def contain(self, substring):
                 selected_rows = set()
                 discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for i, r in enumerate(self.df.rows):
+                for i in self.selected:
+                    r = self.df.rows[i]
                     if search(substring, r[ind]):
                         selected_rows.add(i)
                     else:
@@ -354,5 +379,5 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("value").Not().between(10, 79).greater(0.1)().sort("value").print(5).sort("value", reverse=True).print(5)
-    df.select().where("description").postfix("L3-01").Or().where("description").prefix("AHU-R-B2-02")().print(5)
+    # df.select().where("value").between(10, 79).greater(0.1)().sort("value", reverse=True).print(5)
+    df.select().where("value").less(69.8).where("description").postfix("L3-01").where("sp_value").equal(70)().sort("value").print()
