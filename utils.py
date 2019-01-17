@@ -28,8 +28,12 @@ def time2float(time_str):
             hour, minute = time_str.split(':')
             second = 0
         except ValueError:
-            print("time str = {}".format(time_str))
-            raise ValueError
+            try:
+                hour = time_str
+                minute, second = 0, 0
+            except ValueError:
+                print("time str = {}".format(time_str))
+                raise ValueError
     return float(hour) + float(minute) / 60 + float(second) / 3600
 
 
@@ -165,4 +169,3 @@ class Renderer(object):
 
         with open(self.output_path, 'w') as the_file:
             the_file.write(head + body + foot)
-
