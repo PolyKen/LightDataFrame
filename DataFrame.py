@@ -192,6 +192,22 @@ class DataFrame(object):
                               date=self.df.date)
                 return self
 
+            def postfix(self, pattern):
+                if pattern[-1] != "$":
+                    pattern += "$"
+                selected_rows = []
+                ind = self.df.head.index(self.field)
+                for r in self.df.rows:
+                    if search(pattern, r[ind]):
+                        selected_rows.append(r)
+
+                if len(selected_rows) == 0:
+                    raise Exception("no row selected")
+
+                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
+                              date=self.df.date)
+                return self
+
             def contain(self, substring):
                 selected_rows = []
                 ind = self.df.head.index(self.field)
@@ -231,3 +247,4 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df.select().where("value").between(67, 70.5)().sort("value").print(5).sort("value", reverse=True).print(5)
     print(df.select().where("value").between(69, 70)().sort("value").to_dict_list()[0])
+    df.select().where("description").postfix("01")().print(5)
