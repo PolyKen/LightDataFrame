@@ -171,3 +171,22 @@ class Renderer(object):
 
         with open(self.output_path, 'w') as the_file:
             the_file.write(head + body + foot)
+
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        res = func(*args, **kwargs)
+        end = time.time()
+        t = end - start
+        if t < 1:
+            color = "green"
+        elif t < 10:
+            color = "yellow"
+        else:
+            color = "red"
+        t = round(t, 3)
+        print(colorize("run time of " + func.__name__ + " = " + str(t) + '\n', color))
+        return res
+
+    return wrapper

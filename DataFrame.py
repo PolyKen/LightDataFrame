@@ -1,4 +1,4 @@
-from utils import join, yellow, green
+from utils import join, yellow, green, timer
 from re import match, search
 
 
@@ -8,6 +8,9 @@ class DataFrame(object):
         self.date = kwargs.get("date", None)
         self.head = kwargs.get("head", [])
         self.rows = kwargs.get("rows", [])
+
+    def copy(self):
+        return self.__class__(name=self.name, date=self.date, head=self.head, rows=self.rows)
 
     @staticmethod
     def read_matrix(head, matrix):
@@ -94,16 +97,17 @@ class DataFrame(object):
         self.rows.extend(other.rows)
         return self
 
+    def __sub__(self, other):
+        assert self.head == other.head
+        self.rows = [row for row in self.rows if row not in other.rows]
+        return self
+
+    @timer
     def merge(self, other):
         assert self.head == other.head
         for row in other.rows:
             if row not in self.rows:
                 self.rows.append(row)
-        return self
-
-    def __sub__(self, other):
-        assert self.head == other.head
-        self.rows = [row for row in self.rows if row not in other.rows]
         return self
 
     def map(self, column_name, func):
@@ -118,22 +122,33 @@ class DataFrame(object):
 
         class Selector(object):
             def __init__(self, df, field=None):
-                self.all_df = cls(head=df.head, rows=df.rows, name=df.name, date=df.date)
-                self.keep = df.empty()
+                self.all_df = set(range(len(df.rows)))
+                self.keep = set()
+                self.selected = set()
                 self.df = df
                 self.field = field
                 self.complement = False
 
-            def empty(self):
-                return Selector(df=self.df.empty(), field=self.field)
-
             def __add__(self, other):
                 assert self.field == other.field and self.complement == other.complement
-                assert self.all_df == other.all_df
+                assert self.df == other.df
 
-                self.df.merge(other.df)
-                self.keep.merge(other.keep)
+                self.keep.union(other.keep)
+                self.selected.union(other.selected)
                 return self
+
+            def __call__(self):
+                all_df = self.df.empty()
+                for i in self.keep:
+                    all_df.append(self.df.rows[i])
+                for i in self.selected:
+                    all_df.append(self.df.rows[i])
+                if len(all_df.rows) == 0:
+                    print(yellow("no row selected"))
+                return all_df
+
+            def empty(self):
+                return Selector(df=self.df.empty(), field=self.field)
 
             def where(self, field):
                 self.field = field
@@ -144,98 +159,95 @@ class DataFrame(object):
                 return self
 
             def Or(self):
-                self.keep += self.df
-                self.df = self.all_df
+                self.keep.union(self.selected)
+                self.selected = set()
                 return self
 
             def equal(self, value):
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     try:
                         if r[ind] == value:
-                            selected_rows.append(r)
+                            selected_rows.add(i)
                         else:
-                            discarded_rows.append(r)
+                            discarded_rows.add(i)
                     except TypeError:
                         if type(value) == str:
                             if str(r[ind]) == value:
-                                selected_rows.append(r)
+                                selected_rows.add(i)
                             else:
-                                discarded_rows.append(r)
+                                discarded_rows.add(i)
                         elif type(value) == int or type(value) == float:
                             if float(r[ind]) == value:
-                                selected_rows.append(r)
+                                selected_rows.add(i)
                             else:
-                                discarded_rows.append(r)
+                                discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
 
             def less(self, value):
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     try:
                         if r[ind] < value:
-                            selected_rows.append(r)
+                            selected_rows.add(i)
                         else:
-                            discarded_rows.append(r)
+                            discarded_rows.add(i)
                     except TypeError:
                         if type(value) == str:
                             if str(r[ind]) < value:
-                                selected_rows.append(r)
+                                selected_rows.add(i)
                             else:
-                                discarded_rows.append(r)
+                                discarded_rows.add(i)
                         elif type(value) == int or type(value) == float:
                             if float(r[ind]) < value:
-                                selected_rows.append(r)
+                                selected_rows.add(i)
                             else:
-                                discarded_rows.append(r)
+                                discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
 
             def greater(self, value):
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     try:
                         if r[ind] > value:
-                            selected_rows.append(r)
+                            selected_rows.add(i)
                         else:
-                            discarded_rows.append(r)
+                            discarded_rows.add(i)
                     except TypeError:
                         if type(value) == str:
                             if str(r[ind]) > value:
-                                selected_rows.append(r)
+                                selected_rows.add(i)
                             else:
-                                discarded_rows.append(r)
+                                discarded_rows.add(i)
                         elif type(value) == int or type(value) == float:
                             if float(r[ind]) > value:
-                                selected_rows.append(r)
+                                selected_rows.add(i)
                             else:
-                                discarded_rows.append(r)
+                                discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
 
             def between(self, low, high):
@@ -246,90 +258,80 @@ class DataFrame(object):
                     return self.greater(low).less(high)
 
             def operator(self, opt, value):
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     if type(value) == str:
                         expr = "\"{}\"{}\"{}\""
                     else:
                         expr = "{}{}{}"
 
                     if eval(expr.format(r[ind], opt, value)):
-                        selected_rows.append(r)
+                        selected_rows.add(i)
                     else:
-                        discarded_rows.append(r)
+                        discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
 
             def prefix(self, pattern):
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     if match(pattern, r[ind]):
-                        selected_rows.append(r)
+                        selected_rows.add(i)
                     else:
-                        discarded_rows.append(r)
+                        discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
 
             def postfix(self, pattern):
                 if pattern[-1] != "$":
                     pattern += "$"
 
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     if search(pattern, r[ind]):
-                        selected_rows.append(r)
+                        selected_rows.add(i)
                     else:
-                        discarded_rows.append(r)
+                        discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
 
             def contain(self, substring):
-                selected_rows = []
-                discarded_rows = []
+                selected_rows = set()
+                discarded_rows = set()
                 ind = self.df.head.index(self.field)
-                for r in self.df.rows:
+                for i, r in enumerate(self.df.rows):
                     if search(substring, r[ind]):
-                        selected_rows.append(r)
+                        selected_rows.add(i)
                     else:
-                        discarded_rows.append(r)
+                        discarded_rows.add(i)
 
                 if self.complement:
                     selected_rows, discarded_rows = discarded_rows, selected_rows
                     self.complement = False
 
-                self.df = cls(csv_path=None, head=self.df.head, rows=selected_rows, name=self.df.name,
-                              date=self.df.date)
+                self.selected = selected_rows
                 return self
-
-            def __call__(self):
-                all_df = self.df + self.keep
-                if len(all_df.rows) == 0:
-                    print(yellow("no row selected"))
-                return all_df
 
         return Selector(self)
 
@@ -353,5 +355,5 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("value").Not().between(10, 79)().sort("value").print(5).sort("value", reverse=True).print(5)
+    df.select().where("value").Not().between(10, 79).greater(1)().sort("value").print(5)
     df.select().where("description").postfix("L3-01").Or().where("description").prefix("AHU-R-B2-02")().print(5)
