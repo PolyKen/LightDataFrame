@@ -366,6 +366,10 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            def count(self):
+                all_selected = self.selected.union(self.kept)
+                return len(all_selected)
+
         return Selector(self)
 
     def sort(self, key, reverse=False):

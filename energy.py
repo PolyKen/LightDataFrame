@@ -14,7 +14,7 @@ class EnergyDataFrame(DataFrame):
         return EnergyDataFrame(head=base_data_frame.head, rows=base_data_frame.rows, name=base_data_frame.name,
                                date=base_data_frame.date)
 
-    def plot(self, features=['value']):
+    def plot(self, features=['value'], legends=None):
         fig = plt.figure()
         x = list(self['time'])
         x = list(map(lambda dt: dt.split()[1], x))
@@ -34,13 +34,38 @@ class EnergyDataFrame(DataFrame):
         if len(title) > 0:
             plt.title(title)
 
-        plt.legend(features)
+        if legends:
+            plt.legend(legends)
+        else:
+            plt.legend(features)
 
         fig.savefig('figures/' + self.name + "_" + self.date + '.png', format='png')
         plt.close(fig)
 
 
-def fetch_elec(device_list, limit):
+class Devices(object):
+    @staticmethod
+    def get_key_list():
+        key_list = ['P_3_2', 'P_3_7', 'P_4_2', 'P_7_5', 'P_7_9', 'P_7_14', 'P_8_7', 'P_12_3', 'P_12_4', 'P_12_5',
+                    'P_12_6', 'P_12_7', 'P_12_8', 'P_19_2', 'P_19_5', 'P_19_6', 'P_19_15', 'P_21_8', 'P_21_14',
+                    'P_22_3', 'P_22_5', 'P_22_11', 'P_22_12', 'P_23_2', 'P_23_6', 'P_24_9']
+        return list(map(lambda x: x + ".Value", key_list))
+
+    @staticmethod
+    def get_cooling_list():
+        cooling_list = ['P_3_2', 'P_3_7', 'P_7_9', 'P_7_14', 'P_19_2', 'P_19_5', 'P_21_8', 'P_22_11', 'P_22_12',
+                        'P_23_2', 'P_23_6']
+        return list(map(lambda x: x + ".Value", cooling_list))
+
+    @staticmethod
+    def get_damper_list():
+        damper_list = ["AHU-R-B1-01", "AHU-R-B2-11", "AHU-R-L3-01", "AHU-R-L3-03", "AHU-R-B2-06", "AHU-R-L4-08",
+                       "AHU-R-L4-06", "AHU-R-B2-03", "AHU-R-B2-03", "AHU-R-L4-09", "AHU-R-L4-05", "AHU-R-L3-04",
+                       "AHU-R-L4-03", "AHU-R-L4-07"]
+        return damper_list
+
+
+def fetch_elec_power(device_list, limit):
     rh = RequestHandler(host="183.6.182.4", port=5000, company="hkl")
     param_list = []
     for device in device_list:
@@ -70,7 +95,7 @@ def fetch_elec(device_list, limit):
     return sum_df
 
 
-def fetch_bas(device_list, limit):
+def fetch_bas_damper(device_list, limit):
     rh = RequestHandler(host="183.6.182.4", port=5000, company="hkl")
     param_list = []
     for device in device_list:
@@ -151,7 +176,7 @@ def get_power_values(tpe):
     elif tpe == "cooling":
         _total_df = cooling()
     else:
-        _total_df = fetch_elec(tpe, limit=300)
+        _total_df = fetch_elec_power(tpe, limit=300)
         _total_df.name = tpe
 
     _total_df.date = now("%m-%d")
@@ -161,69 +186,41 @@ def get_power_values(tpe):
 
 if __name__ == "__main__":
     def key():
-        key_list = ['P_3_2', 'P_3_7', 'P_4_2', 'P_7_5', 'P_7_9', 'P_7_14', 'P_8_7', 'P_12_3', 'P_12_4', 'P_12_5',
-                    'P_12_6', 'P_12_7', 'P_12_8', 'P_19_2', 'P_19_5', 'P_19_6', 'P_19_15', 'P_21_8', 'P_21_14',
-                    'P_22_3', 'P_22_5', 'P_22_11', 'P_22_12', 'P_23_2', 'P_23_6', 'P_24_9']
-        key_list = list(map(lambda x: x + ".Value", key_list))
-
-        _total_df = fetch_elec(key_list, limit=300)
-        _total_df.save_csv("key.csv")
-
+        _total_df = fetch_elec_power(Devices.get_key_list(), limit=300)
         _total_df.name = "key unit total power"
         return _total_df
 
 
     def cooling():
-        cooling_list = ['P_3_2', 'P_3_7', 'P_7_9', 'P_7_14', 'P_19_2', 'P_19_5', 'P_21_8', 'P_22_11', 'P_22_12',
-                        'P_23_2', 'P_23_6']
-        cooling_list = list(map(lambda x: x + ".Value", cooling_list))
-
-        _total_df = fetch_elec(cooling_list, limit=2672)
-        _total_df.save_csv("cooling.csv")
-        # total_df = EnergyDataFrame.derive(DataFrame.read_csv("cooling.csv"))
-        # total_df["value"] = list(map(float, total_df["value"]))
-
+        _total_df = fetch_elec_power(Devices.get_cooling_list(), limit=2672)
         _total_df.name = "cooling unit total power"
         return _total_df
 
 
     def yesterday():
-        key_list = ['P_3_2', 'P_3_7', 'P_4_2', 'P_7_5', 'P_7_9', 'P_7_14', 'P_8_7', 'P_12_3', 'P_12_4', 'P_12_5',
-                    'P_12_6', 'P_12_7', 'P_12_8', 'P_19_2', 'P_19_5', 'P_19_6', 'P_19_15', 'P_21_8', 'P_21_14',
-                    'P_22_3', 'P_22_5', 'P_22_11', 'P_22_12', 'P_23_2', 'P_23_6', 'P_24_9']
-        key_list = list(map(lambda x: x + ".Value", key_list))
-
-        _total_df = fetch_elec(key_list, limit=300)
-
+        _total_df = fetch_elec_power(Devices.get_key_list(), limit=300)
         _total_df.name = "key unit total power"
         return _total_df
 
 
-    def co2():
-        co2_list = ["AHU-R-B1-01", "AHU-R-B2-11", "AHU-R-L3-01", "AHU-R-L3-03", "AHU-R-B2-06", "AHU-R-L4-08",
-                    "AHU-R-L4-06", "AHU-R-B2-03", "AHU-R-B2-03", "AHU-R-L4-09", "AHU-R-L4-05", "AHU-R-L3-04",
-                    "AHU-R-L4-03", "AHU-R-L4-07"]
-        _total_df = fetch_bas(co2_list, limit=100)
-        _total_df.name = "co2"
+    def damper():
+        _total_df = fetch_bas_damper(Devices.get_damper_list(), limit=100)
+        _total_df.name = "co2 and damper"
         return _total_df
 
 
-    def test():
-        _total_df = EnergyDataFrame.derive(DataFrame.read_csv("cooling.csv"))
-        _total_df["value"] = list(map(float, _total_df["value"]))
-
-
-    total_df = co2()
-    date_list = ["01-18"]
+    total_df = damper()
+    date_list = date_list_generator(1, 18, 1, 18, pattern="-")
     device_list = ["AHU-R-B1-01", "AHU-R-B2-11", "AHU-R-L3-01", "AHU-R-L3-03", "AHU-R-B2-06", "AHU-R-L4-08",
                    "AHU-R-L4-06", "AHU-R-B2-03", "AHU-R-B2-03", "AHU-R-L4-09", "AHU-R-L4-05", "AHU-R-L3-04",
                    "AHU-R-L4-03", "AHU-R-L4-07"]
-    #
+
     for date in date_list:
         for device in device_list:
             total_df.date = date
             total_df.name = device
-            total_df.select().where("time").contain(date).where("name").contain(device)().sort("time").plot(features=["value", "sp_value", "pos", "reg"])
+            total_df.select().where("time").contain(date).where("name").contain(device)().sort("time").plot(
+                features=["value", "sp_value", "pos", "reg"], legends=["CO2", "CO2 SP", "OaDamperPos", "OaDamperReg"])
 
     ren = Renderer(output_path="default.html")
     ren.render(path="figures/", image_path_list=list(map(lambda nm: nm + "_" + date_list[0], device_list)), col=2)
