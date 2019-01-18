@@ -128,7 +128,8 @@ class DataFrame(object):
                 res = func(*args, **kwargs)
                 num_selected = len(args[0].selected)
                 num_kept = len(args[0].kept)
-                print("[{}] {} out of {} row(s) selected, {} row(s) kept".format(func.__name__, num_selected, total_num, num_kept))
+                print("[{}] {} out of {} row(s) selected, {} row(s) kept".format(func.__name__, num_selected, total_num,
+                                                                                 num_kept))
                 return res
 
             return wrapper
@@ -158,7 +159,7 @@ class DataFrame(object):
                 if len(all_df.rows) == 0:
                     print(yellow("no row selected"))
                 else:
-                    print(green("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows))))
+                    print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
                 return all_df
 
             def empty(self):
@@ -274,7 +275,11 @@ class DataFrame(object):
             def between(self, low, high):
                 if self.complement:
                     self.complement = False
-                    return self.less(low).Or().equal(low).Or().equal(high).Or().greater(high)
+                    origin_all_df = self.all_df.copy()
+                    self.all_df = self.selected.copy()
+                    bet = self.less(low).Or().equal(low).Or().equal(high).Or().greater(high)
+                    bet.all_df = origin_all_df
+                    return bet
                 else:
                     return self.greater(low).less(high)
 
@@ -383,5 +388,4 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("value").Not().between(10, 79)().sort("value").print(5)
-    # df.select().where("value").less(69.8).where("description").postfix("L3-01").where("sp_value").equal(70)().sort("value").print()
+    df.select().where("description").prefix("AHU").where("sp_value").equal(70).where("value").Not().between(69.8, 70.2)().sort("value").print()
