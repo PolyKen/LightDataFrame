@@ -32,7 +32,7 @@ class DataFrame(object):
             for r in self.rows:
                 file.write(join(r) + "\n")
 
-    def to_dict_list(self):
+    def to_dicts(self):
         dict_list = []
         for row in self.rows:
             d = {}
@@ -388,4 +388,4 @@ if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("description").prefix("AHU").where("sp_value").equal(70).where("value").Not().between(69.8, 70.2)().sort("value").print()
+    df.select().where("description").prefix("PAU").where("sp_value").equal(70).where("value").Not().between(69.8, 70.2)().sort("value").print()
