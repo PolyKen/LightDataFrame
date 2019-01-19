@@ -50,13 +50,16 @@ class DataFrame(object):
         return self.__class__(name=self.name, date=self.date, head=self.head, rows=[])
 
     def append(self, row):
-        assert len(row) == len(self.head)
         if type(row) == list:
+            assert len(row) == len(self.head)
             self.rows.append(row)
         if type(row) == dict:
             r = [0 for _ in range(len(self.head))]
             for k, v in row.items():
-                index = self.head.index(k)
+                try:
+                    index = self.head.index(k)
+                except ValueError:
+                    continue
                 r[index] = v
             self.rows.append(r)
 
