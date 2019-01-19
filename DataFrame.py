@@ -32,6 +32,11 @@ class DataFrame(object):
             for r in self.rows:
                 file.write(join(r) + "\n")
 
+    def append_csv(self, path):
+        with open(path, 'a') as file:
+            for r in self.rows:
+                file.write(join(r) + "\n")
+
     def to_dicts(self):
         dict_list = []
         for row in self.rows:
@@ -390,6 +395,9 @@ class DataFrame(object):
 
 if __name__ == "__main__":
     df = DataFrame.read_csv(csv_path='test.csv')
+    raw = df.copy()
+    raw = raw.select().where("description").prefix("PAU")()
     df["value"] = list(map(float, df["value"]))
     df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select().where("description").prefix("PAU").where("sp_value").equal(70).where("value").Not().between(69.8, 70.2)().sort("value").print()
+    df.select().where("description").prefix("PAU").where("sp_value").equal(70).where("value").Not().between(69.8, 70.2)().sort("value")
+    raw.append_csv("test.csv")
