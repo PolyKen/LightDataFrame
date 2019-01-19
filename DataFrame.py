@@ -51,7 +51,14 @@ class DataFrame(object):
 
     def append(self, row):
         assert len(row) == len(self.head)
-        self.rows.append(row)
+        if type(row) == list:
+            self.rows.append(row)
+        if type(row) == dict:
+            r = [0 for _ in range(len(self.head))]
+            for k, v in row.items():
+                index = self.head.index(k)
+                r[index] = v
+            self.rows.append(r)
 
     def print(self, n=-1):
         if len(self.rows) == 0:
