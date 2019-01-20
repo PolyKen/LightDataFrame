@@ -148,21 +148,21 @@ class Renderer(object):
             tbl += r
         return tbl
 
-    def render(self, path, image_path_list, col, title_info=""):
+    def render(self, image_folder_path, image_name_list, col, title_info=""):
         head = "<!DOCTYPE html><html><body>" + \
                "<h2>" + title_info + "</h2>" + \
                '<table style="width:100%">'
         foot = "</table></body></html>"
 
-        path_lst = [os.path.join(path, e + '.png') for e in image_path_list]
-        print("image path list: {}".format(image_path_list))
+        path_lst = [os.path.join(image_folder_path, e + '.png') for e in image_name_list]
+        print("image path list: {}".format(image_name_list))
 
         row_lst = []
         idx = 0
-        while idx < len(image_path_list):
+        while idx < len(image_name_list):
             cell_lst = []
             for i in range(col):
-                if idx >= len(image_path_list):
+                if idx >= len(image_name_list):
                     break
                 cell_lst.append(self.image(path_lst[idx]))
                 idx += 1

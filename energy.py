@@ -5,14 +5,8 @@ import json
 
 
 class EnergyDataFrame(DataFrame):
-    def __init__(self, **kwargs):
-        super(EnergyDataFrame, self).__init__(**kwargs)
-
-    @staticmethod
-    def derive(base_data_frame):
-        assert type(base_data_frame) == DataFrame
-        return EnergyDataFrame(head=base_data_frame.head, rows=base_data_frame.rows, name=base_data_frame.name,
-                               date=base_data_frame.date)
+    def __init__(self, *args, **kwargs):
+        super(EnergyDataFrame, self).__init__(*args, **kwargs)
 
     def plot(self, features=['value'], legends=None):
         fig = plt.figure()
@@ -82,7 +76,7 @@ def fetch_elec_power(device_list, limit):
         mat = json.loads(res.text)["result"]
         if len(mat) == 0:
             continue
-        all_df += EnergyDataFrame.derive(DataFrame.read_matrix(head=head, matrix=mat))
+        all_df += EnergyDataFrame(DataFrame.read_matrix(head=head, matrix=mat))
 
     times = list(map(lambda dt: dt[0:-3], all_df["time"]))
     times = list(set(times))
@@ -140,19 +134,19 @@ def fetch_bas_damper(device_list, limit):
 
         tmp = DataFrame.read_matrix(head=["time", "value"], matrix=co2_mat)
         tmp["name"] = [device for _ in range(len(co2_mat))]
-        co2_df += EnergyDataFrame.derive(tmp)
+        co2_df += EnergyDataFrame(tmp)
 
         tmp = DataFrame.read_matrix(head=["time", "value"], matrix=co2_sp_mat)
         tmp["name"] = [device for _ in range(len(co2_sp_mat))]
-        co2_sp_df += EnergyDataFrame.derive(tmp)
+        co2_sp_df += EnergyDataFrame(tmp)
 
         tmp = DataFrame.read_matrix(head=["time", "value"], matrix=pos_mat)
         tmp["name"] = [device for _ in range(len(pos_mat))]
-        pos_df += EnergyDataFrame.derive(tmp)
+        pos_df += EnergyDataFrame(tmp)
 
         tmp = DataFrame.read_matrix(head=["time", "value"], matrix=reg_mat)
         tmp["name"] = [device for _ in range(len(reg_mat))]
-        reg_df += EnergyDataFrame.derive(tmp)
+        reg_df += EnergyDataFrame(tmp)
 
     co2_df.sort("name")
     co2_sp_df.sort("name")
@@ -210,7 +204,8 @@ if __name__ == "__main__":
 
 
     total_df = damper()
-    date_list = date_list_generator(1, 18, 1, 18, pattern="-")
+    total_df.select().where("time").contain("01-20").where("name").equal("AHU-R-L4-06")().sort("time").print(100)
+    date_list = date_list_generator(1, 20, 1, 20, pattern="-")
     device_list = ["AHU-R-B1-01", "AHU-R-B2-11", "AHU-R-L3-01", "AHU-R-L3-03", "AHU-R-B2-06", "AHU-R-L4-08",
                    "AHU-R-L4-06", "AHU-R-B2-03", "AHU-R-B2-03", "AHU-R-L4-09", "AHU-R-L4-05", "AHU-R-L3-04",
                    "AHU-R-L4-03", "AHU-R-L4-07"]
@@ -223,4 +218,4 @@ if __name__ == "__main__":
                 features=["value", "sp_value", "pos", "reg"], legends=["CO2", "CO2 SP", "OaDamperPos", "OaDamperReg"])
 
     ren = Renderer(output_path="default.html")
-    ren.render(path="figures/", image_path_list=list(map(lambda nm: nm + "_" + date_list[0], device_list)), col=2)
+    ren.render(image_folder_path="figures/", image_name_list=list(map(lambda nm: nm + "_" + date_list[0], device_list)), col=2)

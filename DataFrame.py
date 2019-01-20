@@ -1,13 +1,38 @@
-from utils import join, yellow, green, timer
+from utils import join, yellow, green, timer, now
 from re import match, search
 
 
 class DataFrame(object):
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", None)
-        self.date = kwargs.get("date", None)
-        self.head = kwargs.get("head", [])
-        self.rows = kwargs.get("rows", [])
+    def __init__(self, *args, **kwargs):
+        skip = False
+
+        head = kwargs.get("head", [])
+        rows = kwargs.get("rows", [])
+        name = kwargs.get("name", None)
+        date = kwargs.get("date", now(fmt="%m-%d"))
+
+        for arg in args:
+            if type(arg) == DataFrame:
+                name = arg.name
+                date = arg.date
+                head = arg.head
+                rows = arg.rows
+                skip = True
+                break
+
+        if not skip:
+            for k, v in kwargs.items():
+                if type(v) == DataFrame:
+                    name = v.name
+                    date = v.date
+                    head = v.head
+                    rows = v.rows
+                    break
+
+        self.name = name
+        self.date = date
+        self.head = head
+        self.rows = rows
 
     def copy(self):
         return self.__class__(name=self.name, date=self.date, head=self.head, rows=self.rows)
