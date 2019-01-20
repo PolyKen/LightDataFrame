@@ -88,6 +88,9 @@ class DataFrame(object):
                 r[index] = v
             self.rows.append(r)
 
+    def pop(self, row_num):
+        return self.rows.pop(row_num)
+
     def print(self, n=-1):
         if len(self.rows) == 0:
             print(green(join(self.head, "\t")))
