@@ -158,8 +158,6 @@ class DataFrame(object):
         return self
 
     def select(self):
-        cls = self.__class__
-
         def detail(func):
             @timer
             def wrapper(*args, **kwargs):
