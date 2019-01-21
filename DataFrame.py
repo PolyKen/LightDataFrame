@@ -163,6 +163,7 @@ class DataFrame(object):
         self[column_name] = list(map(func, self[column_name]))
         return self
 
+    @property
     def select(self):
         def detail(func):
             @timer
@@ -213,10 +214,12 @@ class DataFrame(object):
                 self.field = field
                 return self
 
+            @property
             def Not(self):
                 self.complement = True
                 return self
 
+            @property
             def Or(self):
                 self.kept = self.kept.union(self.selected)
                 self.selected = self.all_df.difference(self.kept)
@@ -321,7 +324,7 @@ class DataFrame(object):
                     self.complement = False
                     origin_all_df = self.all_df.copy()
                     self.all_df = self.selected.copy()
-                    bet = self.less(low).Or().equal(low).Or().equal(high).Or().greater(high)
+                    bet = self.less(low).Or.equal(low).Or.equal(high).Or.greater(high)
                     bet.all_df = origin_all_df
                     return bet
                 else:
