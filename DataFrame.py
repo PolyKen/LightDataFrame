@@ -179,7 +179,7 @@ class DataFrame(object):
 
             return wrapper
 
-        class Selector(object):
+        class Filter(object):
             def __init__(self, df, field=None):
                 self.all_df = set(range(len(df.rows)))
                 self.kept = set()
@@ -208,7 +208,7 @@ class DataFrame(object):
                 return all_df
 
             def empty(self):
-                return Selector(df=self.df.empty(), field=self.field)
+                return Filter(df=self.df.empty(), field=self.field)
 
             def where(self, field):
                 self.field = field
@@ -417,7 +417,7 @@ class DataFrame(object):
                 all_selected = self.selected.union(self.kept)
                 return len(all_selected)
 
-        return Selector(self)
+        return Filter(self)
 
     def sort(self, key, reverse=False):
         self.rows = sorted(self.rows, key=lambda x: x[self.head.index(key)], reverse=reverse)
