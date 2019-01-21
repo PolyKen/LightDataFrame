@@ -144,6 +144,9 @@ class DataFrame(object):
         assert self.head == other.head
         self.rows = [row for row in self.rows if row not in other.rows]
         return self
+    
+    def __len__(self):
+        return len(self.rows)
 
     @timer
     def merge(self, other):
