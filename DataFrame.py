@@ -191,8 +191,8 @@ class DataFrame(object):
                 assert self.field == other.field and self.complement == other.complement
                 assert self.df == other.df
 
-                self.kept.union(other.keep)
-                self.selected.union(other.selected)
+                self.kept = self.kept.union(other.keep)
+                self.selected = self.selected.union(other.selected)
                 return self
 
             def __call__(self):
