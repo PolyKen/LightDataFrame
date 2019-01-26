@@ -1,5 +1,6 @@
 from utils import join, yellow, green, timer, now
 from re import match, search
+import random
 
 
 class DataFrame(object):
@@ -34,11 +35,40 @@ class DataFrame(object):
         self.head = head
         self.rows = rows
 
+    def __getitem__(self, key):
+        if type(key) == str:
+            index = self.head.index(key)
+            return [r[index] for r in self.rows]
+        elif type(key) == int:
+            return self.rows[key]
+        else:
+            print("{}(type: {}) is not a column name or row index".format(key, type(key)))
+            raise KeyError
+
+    def __add__(self, other):
+        assert self.head == other.head
+        self.rows.extend(other.rows)
+        return self
+
+    def __sub__(self, other):
+        assert self.head == other.head
+        self.rows = [row for row in self.rows if row not in other.rows]
+        return self
+
+    def __len__(self):
+        return len(self.rows)
+
+    def __str__(self):
+        abstract = "<DataFrame object> name: {}, {} row(s)".format(self.name, len(self))
+        self.print()
+        return abstract
+
     def copy(self):
         return self.__class__(name=self.name, date=self.date, head=self.head, rows=self.rows)
 
     @staticmethod
-    def read_matrix(head, matrix):
+    def read_matrix(matrix, **kwargs):
+        head = kwargs.get("head", ["col_{}".format(i + 1) for i in range(len(matrix[0]))])
         assert len(head) == len(matrix[0]), Exception("{}, {}".format(head, matrix[0]))
         return DataFrame(head=head, rows=matrix)
 
@@ -133,33 +163,6 @@ class DataFrame(object):
             print()
         return self
 
-    def __getitem__(self, key):
-        if type(key) == str:
-            index = self.head.index(key)
-            return [r[index] for r in self.rows]
-        elif type(key) == int:
-            return self.rows[key]
-        else:
-            raise KeyError
-
-    def __add__(self, other):
-        assert self.head == other.head
-        self.rows.extend(other.rows)
-        return self
-
-    def __sub__(self, other):
-        assert self.head == other.head
-        self.rows = [row for row in self.rows if row not in other.rows]
-        return self
-
-    def __len__(self):
-        return len(self.rows)
-
-    def __str__(self):
-        abstract = "<DataFrame object> name={} {} row(s)".format(self.name, len(self))
-        self.print()
-        return abstract
-
     @timer
     def merge(self, other):
         assert self.head == other.head
@@ -174,6 +177,25 @@ class DataFrame(object):
 
         self[column_name] = list(map(func, self[column_name]))
         return self
+
+    def mean(self, column_name_or_row_index):
+        lst = self[column_name_or_row_index]
+        return sum(lst) / len(lst)
+
+    def variance(self, column_name_or_row_index):
+        lst = self[column_name_or_row_index]
+        mean = self.mean(column_name_or_row_index)
+        return sum(list(map(lambda x: (x-mean)**2, lst))) / len(lst)
+
+    def sample(self, num=None, proportion=None):
+        if num is not None:
+            indices = random.sample(range(len(self)), num)
+        elif proportion is not None:
+            indices = random.sample(range(len(self)), int(len(self) * proportion))
+        else:
+            indices = random.sample(range(len(self)), 0.1)
+        return self[indices]
+
 
     @property
     def select(self):
@@ -445,13 +467,3 @@ class DataFrame(object):
             ind = self.head.index(column_name)
             for i in range(len(self.rows)):
                 self.rows[i][ind] = column_list[i]
-
-
-if __name__ == "__main__":
-    df = DataFrame.read_csv(csv_path='test.csv')
-    raw = df.copy()
-    raw = raw.select.where("description").prefix("PAU")()
-    df["value"] = list(map(float, df["value"]))
-    df["sp_value"] = list(map(float, df["sp_value"]))
-    df.select.where("description").prefix("PAU").where("sp_value").equal(70).where("value").Not.between(69.8, 70.2)().sort("value")
-    raw.append_csv("test.csv")
