@@ -155,6 +155,11 @@ class DataFrame(object):
     def __len__(self):
         return len(self.rows)
 
+    def __str__(self):
+        abstract = "<DataFrame object> name={} {} row(s)".format(self.name, len(self))
+        self.print()
+        return abstract
+
     @timer
     def merge(self, other):
         assert self.head == other.head
@@ -180,8 +185,8 @@ class DataFrame(object):
                 res = func(*args, **kwargs)
                 num_selected = len(args[0].selected)
                 num_kept = len(args[0].kept)
-                print("[{}] {} out of {} row(s) selected, {} row(s) kept".format(func.__name__, num_selected, total_num,
-                                                                                 num_kept))
+                report_text = "[{}] {} out of {} row(s) selected, {} row(s) kept"
+                print(report_text.format(func.__name__, num_selected, total_num, num_kept))
                 return res
 
             return wrapper
