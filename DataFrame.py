@@ -62,14 +62,21 @@ class DataFrame(object):
             for r in self.rows:
                 file.write(join(r) + "\n")
 
-    def to_dicts(self):
-        dict_list = []
-        for row in self.rows:
+    def dict(self, row_num=None):
+        if row_num is None:
+            dict_list = []
+            for row in self.rows:
+                d = {}
+                for i in range(len(self.head)):
+                    d[self.head[i]] = row[i]
+                dict_list.append(d)
+            return dict_list
+        else:
+            row = self.rows[row_num]
             d = {}
             for i in range(len(self.head)):
                 d[self.head[i]] = row[i]
-            dict_list.append(d)
-        return dict_list
+            return d
 
     def empty(self):
         return self.__class__(name=self.name, date=self.date, head=self.head, rows=[])
