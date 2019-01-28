@@ -3,6 +3,11 @@ A light and user-friendly data structure used to process csv files or tables.
 
 ## Usage
 
+- import: 
+```
+from DataFrame import DataFrame
+```
+
 - read csv
 ```
 df = DataFrame.read_csv(csv_path)
