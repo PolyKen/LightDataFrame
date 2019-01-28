@@ -57,6 +57,17 @@ class DataFrame(object):
             print("{}(type: {}) is not a column name or row index".format(key, type(key)))
             raise KeyError
 
+    def __setitem__(self, column_name, column_list):
+        assert len(self.rows) == len(column_list), AssertionError("{}, {}".format(len(self.rows), len(column_list)))
+        if column_name not in self.head:
+            self.head.append(column_name)
+            for i in range(len(self.rows)):
+                self.rows[i].append(column_list[i])
+        else:
+            ind = self.head.index(column_name)
+            for i in range(len(self.rows)):
+                self.rows[i][ind] = column_list[i]
+
     def __add__(self, other):
         assert self.head == other.head
         self.rows.extend(other.rows)
@@ -137,7 +148,7 @@ class DataFrame(object):
                 r[index] = v
             self.rows.append(r)
 
-    def pop(self, row_num):
+    def pop(self, row_num=None):
         return self.rows.pop(row_num)
 
     def print(self, n=-1):
@@ -147,7 +158,7 @@ class DataFrame(object):
             def get_col_width(lst):
                 return max(list(map(lambda x: len(str(x)), lst)))
 
-            col_width_list = list(map(lambda col_name: get_col_width(self[col_name]), self.head))
+            col_width_list = list(map(lambda col: get_col_width(self[col]), self.head))
 
             delta_list = []
             for i in range(len(self.head)):
@@ -197,7 +208,7 @@ class DataFrame(object):
     def variance(self, column_name_or_row_index):
         lst = self[column_name_or_row_index]
         mean = self.mean(column_name_or_row_index)
-        return sum(list(map(lambda x: (x-mean)**2, lst))) / len(lst)
+        return sum(list(map(lambda x: (x - mean) ** 2, lst))) / len(lst)
 
     def sample(self, num=None, proportion=None):
         if num is not None:
@@ -208,6 +219,9 @@ class DataFrame(object):
             indices = random.sample(range(len(self)), 0.1)
         return self[indices]
 
+    def sort(self, key, reverse=False):
+        self.rows = sorted(self.rows, key=lambda x: x[self.head.index(key)], reverse=reverse)
+        return self
 
     @property
     def select(self):
@@ -464,18 +478,3 @@ class DataFrame(object):
                 return len(all_selected)
 
         return Filter(self)
-
-    def sort(self, key, reverse=False):
-        self.rows = sorted(self.rows, key=lambda x: x[self.head.index(key)], reverse=reverse)
-        return self
-
-    def __setitem__(self, column_name, column_list):
-        assert len(self.rows) == len(column_list), AssertionError("{}, {}".format(len(self.rows), len(column_list)))
-        if column_name not in self.head:
-            self.head.append(column_name)
-            for i in range(len(self.rows)):
-                self.rows[i].append(column_list[i])
-        else:
-            ind = self.head.index(column_name)
-            for i in range(len(self.rows)):
-                self.rows[i][ind] = column_list[i]
