@@ -28,7 +28,7 @@ df.append(new_row)  # append new row
 df.pop(row_num)  # pop, equivalent to df.rows.pop(row_num)
 ```
 
-- select / add / modify column
+- **select / add / modify column**
 ```
 name_list = df["name"]  # get a list
 extract_df = df[["description", "value"]]  # get a new DataFrame object with two columns
@@ -36,7 +36,7 @@ df["name"] = ["Mary", "Kevin"]  # replace whole column
 df["sex"] = ["F", "M"]  # add a new column
 ```
 
-- query with conditions
+- **query with conditions**
 
 ```
 # finding rows where age > 16, sex = "M"
