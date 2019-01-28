@@ -46,7 +46,7 @@ df = df.select.where("age").greater(16).where("sex").equal("M")()
 df = df.select.where("name").contain("iphone").where("price").between(6000, 9000)()
 df = df.select.where("release date").contain("2017").Or.contain("2018")()
   
-# Note: ".Or" is inferior to ".where(feature).<condition>(cond)", for example,
+# Note: ".Or" is inferior to ".where(feature).<operator>(cond)", for example,
 # df.select.where("A").greater(1).where("B").prefix("cn").Or.where("C").postfix("uw").where("D").less(9)()
 # is equivalent to finding rows satisfying "(A > 1 and B prefix "cn") or (C postfix "uw" and D < 9)"
 
