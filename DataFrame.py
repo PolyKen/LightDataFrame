@@ -41,6 +41,18 @@ class DataFrame(object):
             return [r[index] for r in self.rows]
         elif type(key) == int:
             return self.rows[key]
+        elif type(key) == list:
+            if type(key[0]) == int:
+                lists = []
+                for ind in key:
+                    lists.append(self.rows[ind])
+                return lists
+            elif type(key[0]) == str:
+                df = self.__class__(name=self.name, date=self.date, head=[], rows=[[] for _ in range(len(self))])
+                for col_name in key:
+                    index = self.head.index(col_name)
+                    df[col_name] = [r[index] for r in self.rows]
+                return df
         else:
             print("{}(type: {}) is not a column name or row index".format(key, type(key)))
             raise KeyError
