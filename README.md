@@ -1,5 +1,15 @@
 # Light DataFrame
-A light and user-friendly data structure used to process csv files or tables.
+A light and user-friendly data structure with convenient filter used to process csv files or tables. <br>
+
+## Quick Example
+- print orders in Oct. 2017/2018 sorted in price
+```
+from DataFrame import DataFrame
+
+
+df = DataFrame.read_csv("orders.csv")
+df.select.where("date").contain("2017-10").Or.where("date").contain("2018-10")().sort("price").print()
+```
 
 ## Usage
 
