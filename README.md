@@ -8,7 +8,7 @@ from DataFrame import DataFrame
 
 
 df = DataFrame.read_csv("orders.csv")
-df.select.where("date").contain("2017-10").Or.where("date").contain("2018-10")().sort("price").print()
+df.select.where("date").contain("2017-10").Or.contain("2018-10")().sort("price").print()
 ```
 
 ## Usage
