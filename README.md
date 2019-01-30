@@ -51,7 +51,7 @@ df = df.select.where("release date").contain("2017").Or.contain("2018")()
 # is equivalent to finding rows satisfying "(A > 1 and B prefix "cn") or (C postfix "uw" and D < 9)"
 
 # finding rows where id don't have prefix "AHU", then print 20 results
-df.select.where("id").Not.prefix("AHU").print(20)
+df.select.where("id").Not.prefix("AHU")().print(20)
 ```
 
 - sort by column
