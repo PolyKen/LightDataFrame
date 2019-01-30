@@ -2,13 +2,18 @@
 A light and user-friendly data structure with convenient filter used to process csv files or tables. <br>
 
 ## Quick Example
-- print orders made in Oct. 2017/2018 sorted by price
 ```
 from DataFrame import DataFrame
-
-
+```
+- print orders made in Oct. 2017/2018 sorted by price:
+```
 df = DataFrame.read_csv("orders.csv")
 df.select.where("date").contain("2017-10").Or.contain("2018-10")().sort("price").print()
+```
+
+- save orders settled in USD with price greater than $1000 to a new csv file:
+```
+df.select.where("settlement").equal("USD").where("price").greater(1000)().save_csv("some_orders.csv")
 ```
 
 ## Usage
