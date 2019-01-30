@@ -2,7 +2,7 @@
 A light and user-friendly data structure with convenient filter used to process csv files or tables. <br>
 
 ## Quick Example
-- print orders in Oct. 2017/2018 sorted in price
+- print orders made in Oct. 2017/2018 sorted by price
 ```
 from DataFrame import DataFrame
 
