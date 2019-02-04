@@ -12,12 +12,15 @@ class DataFrame(object):
         name = kwargs.get("name", None)
         date = kwargs.get("date", now(fmt="%m-%d"))
 
+        verbose = kwargs.get("verbose", False)
+
         for arg in args:
             if type(arg) == DataFrame:
                 name = arg.name
                 date = arg.date
                 head = arg.head
                 rows = arg.rows
+                verbose = arg.verbose
                 skip = True
                 break
 
@@ -28,12 +31,15 @@ class DataFrame(object):
                     date = v.date
                     head = v.head
                     rows = v.rows
+                    verbose = v.verbose
                     break
 
         self.name = name
         self.date = date
         self.head = head
         self.rows = rows
+
+        self.verbose = verbose
 
     def __getitem__(self, key):
         if type(key) == str:
@@ -225,7 +231,16 @@ class DataFrame(object):
 
     @property
     def select(self):
+        verbose = self.verbose
+
         def detail(func):
+            if not verbose:
+                def wrapper(*args, **kwargs):
+                    wrapper.__name__ = func.__name__
+                    return func(*args, **kwargs)
+
+                return wrapper
+
             @timer
             def wrapper(*args, **kwargs):
                 wrapper.__name__ = func.__name__
@@ -261,11 +276,15 @@ class DataFrame(object):
                 self.selected = self.selected.union(self.kept)
                 for i in self.selected:
                     all_df.append(self.df.rows[i])
-                if len(all_df.rows) == 0:
-                    print(yellow("no row selected"))
-                else:
-                    print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
+                if verbose:
+                    if len(all_df.rows) == 0:
+                        print(yellow("no row selected"))
+                    else:
+                        print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
                 return all_df
+
+            def indices(self):
+                return list(self.selected.union(self.kept))
 
             def empty(self):
                 return Filter(df=self.df.empty(), field=self.field)
