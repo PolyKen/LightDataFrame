@@ -93,7 +93,10 @@ class DataFrame(object):
         return abstract
 
     def copy(self):
-        return self.__class__(name=self.name, date=self.date, head=self.head, rows=self.rows)
+        rows = []
+        for row in self.rows:
+            rows.append(row.copy())
+        return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
 
     @staticmethod
     def read_matrix(matrix, **kwargs):
