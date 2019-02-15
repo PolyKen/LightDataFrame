@@ -63,16 +63,25 @@ class DataFrame(object):
             print("{}(type: {}) is not a column name or row index".format(key, type(key)))
             raise KeyError
 
-    def __setitem__(self, column_name, column_list):
-        assert len(self.rows) == len(column_list), AssertionError("{}, {}".format(len(self.rows), len(column_list)))
-        if column_name not in self.head:
-            self.head.append(column_name)
-            for i in range(len(self.rows)):
-                self.rows[i].append(column_list[i])
+    def __setitem__(self, column_name_or_row_index, column_or_row):
+        key = column_name_or_row_index
+        value = column_or_row
+        assert len(self.rows) == len(value), AssertionError("{}, {}".format(len(self.rows), len(value)))
+        if type(key) == str:
+            if key not in self.head:
+                self.head.append(key)
+                for i in range(len(self.rows)):
+                    self.rows[i].append(value[i])
+            else:
+                ind = self.head.index(key)
+                for i in range(len(self.rows)):
+                    self.rows[i][ind] = value[i]
+        elif type(key) == int:
+            assert len(self.head) == len(value)
+            self.rows[key] = value
         else:
-            ind = self.head.index(column_name)
-            for i in range(len(self.rows)):
-                self.rows[i][ind] = column_list[i]
+            print("{}(type: {}) is not a column name or row index".format(key, type(key)))
+            raise KeyError
 
     def __add__(self, other):
         assert self.head == other.head
