@@ -20,6 +20,10 @@ if __name__ == "__main__":
 
     a = DataFrame.read_matrix(matrix=[[1, 1, 1], [2, 2, 2], [3, 3, 3]])
     b = a.copy()
-    a[2] = [99, 99, 99]
+    a[2] = [123, 234, 345]
+    c = a + b
+    d = c - a
     a.print()
     b.print()
+    c.print()
+    d.print()
