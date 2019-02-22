@@ -25,6 +25,8 @@ if __name__ == "__main__":
     d = c - a
     a.print()
     b.print()
+    c.print()
+    d.print()
 
     d = {"date": "2019-01-01", "person": "Mark", "value": 20}
     df = DataFrame.read_dict(d)
