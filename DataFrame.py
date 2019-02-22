@@ -83,15 +83,27 @@ class DataFrame(object):
             print("{}(type: {}) is not a column name or row index".format(key, type(key)))
             raise KeyError
 
-    def __add__(self, other):
+    def __add__(self, other, inplace=False):
         assert self.head == other.head
-        self.rows.extend(other.rows)
-        return self
+        if inplace:
+            self.rows.extend(other.rows)
+            return self
+        else:
+            rows = []
+            for row in self.rows:
+                rows.append(row)
+            for row in other.rows:
+                rows.append(row)
+            return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
 
-    def __sub__(self, other):
+    def __sub__(self, other, inplace=False):
         assert self.head == other.head
-        self.rows = [row for row in self.rows if row not in other.rows]
-        return self
+        rows = [row for row in self.rows if row not in other.rows]
+        if inplace:
+            self.rows = rows
+            return self
+        else:
+            return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
 
     def __len__(self):
         return len(self.rows)
@@ -104,7 +116,7 @@ class DataFrame(object):
     def copy(self):
         rows = []
         for row in self.rows:
-            rows.append(row.copy())
+            rows.append(row)
         return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
 
     @staticmethod
@@ -160,7 +172,7 @@ class DataFrame(object):
             return d
 
     def empty(self):
-        return self.__class__(name=self.name, date=self.date, head=self.head, rows=[])
+        return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=[])
 
     def append(self, row):
         if type(row) == list:
