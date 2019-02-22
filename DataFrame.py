@@ -108,6 +108,16 @@ class DataFrame(object):
         return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
 
     @staticmethod
+    def read_dict(d, **kwargs):
+        name = kwargs.get("name", None)
+        date = kwargs.get("date", None)
+        head, row = [], []
+        for k, v in d.items():
+            head.append(k)
+            row.append(v)
+        return DataFrame(name=name, date=date, head=head, rows=[row])
+
+    @staticmethod
     def read_matrix(matrix, **kwargs):
         head = kwargs.get("head", ["col_{}".format(i + 1) for i in range(len(matrix[0]))])
         assert len(head) == len(matrix[0]), Exception("{}, {}".format(head, matrix[0]))
@@ -166,7 +176,7 @@ class DataFrame(object):
                 r[index] = v
             self.rows.append(r)
 
-    def pop(self, row_num=None):
+    def pop(self, row_num=-1):
         return self.rows.pop(row_num)
 
     def print(self, n=-1):

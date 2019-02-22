@@ -23,3 +23,11 @@ if __name__ == "__main__":
     a[2] = [99, 99, 99]
     a.print()
     b.print()
+
+    d = {"date": "2019-01-01", "person": "Mark", "value": 20}
+    df = DataFrame.read_dict(d)
+    df.print()
+    df.append({"date": "2019-03-01", "value": 12, "person": "Lua"})
+    df.print()
+    df.pop()
+    df.save_csv("abc.csv")
