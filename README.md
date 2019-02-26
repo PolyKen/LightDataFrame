@@ -11,6 +11,11 @@ df = DataFrame.read_csv("orders.csv")
 df.select.where("date").contain("2017-10").Or.contain("2018-10")().sort("price").print()
 ```
 
+- set field "important" as "False" for all rows whose "price" field value is less than 300:
+```
+df.update("important", True).where("price").less(300)()
+```
+
 - save orders settled in USD with price greater than $1000 to a new csv file:
 ```
 df.select.where("settlement").equal("USD").where("price").greater(1000)().save_csv("some_orders.csv")
