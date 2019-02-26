@@ -11,7 +11,7 @@ if __name__ == "__main__":
     print(df.select.where("description").contain("R").count())
     # raw.append_csv("test.csv")
     print(df[[3, 5]])
-    df[["time", "value"]].print(10)
+    df[["time", "value"]].print(10, highlight_rows=[1, 2, 3, 4])
 
     lst = list(range(10))
     mat = [[i, j, k] for i, j, k in product(lst, lst, lst)]
@@ -34,4 +34,4 @@ if __name__ == "__main__":
     df.append({"date": "2019-03-01", "value": 12, "person": "Lua"})
     df.print()
     df.pop()
-    df.save_csv("abc.csv")
+    # df.save_csv("abc.csv")

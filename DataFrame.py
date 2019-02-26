@@ -191,7 +191,7 @@ class DataFrame(object):
     def pop(self, row_num=-1):
         return self.rows.pop(row_num)
 
-    def print(self, n=-1):
+    def print(self, n=-1, highlight_rows=[]):
         if len(self.rows) == 0:
             print(green(join(self.head, "\t")))
         else:
@@ -222,7 +222,10 @@ class DataFrame(object):
                     head_len = len(self.head[j] + " " * max(delta_list[j] + 2, 2))
                     space_num = head_len - len(str(r[j]))
                     _row += str(r[j]) + " " * space_num
-                print(_row)
+                if i in highlight_rows:
+                    print(yellow(_row))
+                else:
+                    print(_row)
             print()
         return self
 
