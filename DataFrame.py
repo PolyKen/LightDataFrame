@@ -268,10 +268,10 @@ class DataFrame(object):
         self.rows = sorted(self.rows, key=lambda x: x[self.head.index(key)], reverse=reverse)
         return self
 
-    def update(self, col_name, value):
-        assert (col_name is None and value is None) or (col_name is not None and value is not None)
+    def update(self, col_name, new_value):
+        assert (col_name is None and new_value is None) or (col_name is not None and new_value is not None)
         _col_name = col_name
-        _value = value
+        _value = new_value
         verbose = self.verbose
 
         def detail(func):
@@ -547,4 +547,4 @@ class DataFrame(object):
 
     @property
     def select(self):
-        return self.update(col_name=None, value=None)
+        return self.update(col_name=None, new_value=None)
