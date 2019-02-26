@@ -32,6 +32,10 @@ if __name__ == "__main__":
     df = DataFrame.read_dict(d)
     df.print()
     df.append({"date": "2019-03-01", "value": 12, "person": "Lua"})
+    df.append({"date": "2019-02-02", "value": 23, "person": "Kenny"})
+    df.append({"date": "2019-03-12", "value": 15, "person": "Tom"})
     df.print()
     df.pop()
+    df.update("date", "1997-04-21").where("person").equal("Kenny")().print(highlight_rows=2)
     # df.save_csv("abc.csv")
+

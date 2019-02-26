@@ -192,6 +192,8 @@ class DataFrame(object):
         return self.rows.pop(row_num)
 
     def print(self, n=-1, highlight_rows=[]):
+        if type(highlight_rows) == int:
+            highlight_rows = [highlight_rows]
         if len(self.rows) == 0:
             print(green(join(self.head, "\t")))
         else:
@@ -222,7 +224,7 @@ class DataFrame(object):
                     head_len = len(self.head[j] + " " * max(delta_list[j] + 2, 2))
                     space_num = head_len - len(str(r[j]))
                     _row += str(r[j]) + " " * space_num
-                if i in highlight_rows:
+                if i - 1 in highlight_rows:
                     print(yellow(_row))
                 else:
                     print(_row)
@@ -266,8 +268,10 @@ class DataFrame(object):
         self.rows = sorted(self.rows, key=lambda x: x[self.head.index(key)], reverse=reverse)
         return self
 
-    @property
-    def select(self):
+    def update(self, col_name, value):
+        assert (col_name is None and value is None) or (col_name is not None and value is not None)
+        _col_name = col_name
+        _value = value
         verbose = self.verbose
 
         def detail(func):
@@ -309,16 +313,22 @@ class DataFrame(object):
                 return self
 
             def __call__(self):
-                all_df = self.df.empty()
-                self.selected = self.selected.union(self.kept)
-                for i in self.selected:
-                    all_df.append(self.df.rows[i])
-                if verbose:
-                    if len(all_df.rows) == 0:
-                        print(yellow("no row selected"))
-                    else:
-                        print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
-                return all_df
+                if _col_name is None:
+                    all_df = self.df.empty()
+                    self.selected = self.selected.union(self.kept)
+                    for i in self.selected:
+                        all_df.append(self.df.rows[i])
+                    if verbose:
+                        if len(all_df.rows) == 0:
+                            print(yellow("no row selected"))
+                        else:
+                            print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
+                    return all_df
+                else:
+                    col_ind = self.df.head.index(_col_name)
+                    for row_ind in self.indices():
+                        self.df[row_ind][col_ind] = _value
+                    return self.df
 
             def indices(self):
                 return list(self.selected.union(self.kept))
@@ -534,3 +544,7 @@ class DataFrame(object):
                 return len(all_selected)
 
         return Filter(self)
+
+    @property
+    def select(self):
+        return self.update(col_name=None, value=None)
