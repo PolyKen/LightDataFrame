@@ -191,9 +191,12 @@ class DataFrame(object):
     def pop(self, row_num=-1):
         return self.rows.pop(row_num)
 
-    def print(self, n=-1, highlight_rows=[]):
-        if type(highlight_rows) == int:
+    def print(self, n=-1, highlight_rows=None):
+        if highlight_rows is None:
+            highlight_rows = []
+        elif type(highlight_rows) == int:
             highlight_rows = [highlight_rows]
+
         if len(self.rows) == 0:
             print(green(join(self.head, "\t")))
         else:
