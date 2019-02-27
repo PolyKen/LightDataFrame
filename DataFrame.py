@@ -300,9 +300,9 @@ class DataFrame(object):
 
         class Filter(object):
             def __init__(self, df, field=None):
-                self.all_df = set(range(len(df.rows)))
+                self.all_df = set(range(len(df)))
                 self.kept = set()
-                self.selected = set(range(len(df.rows)))
+                self.selected = set(range(len(df)))
                 self.df = df
                 self.field = field
                 self.complement = False
@@ -322,15 +322,20 @@ class DataFrame(object):
                     for i in self.selected:
                         all_df.append(self.df.rows[i])
                     if verbose:
-                        if len(all_df.rows) == 0:
+                        if len(all_df) == 0:
                             print(yellow("no row selected"))
                         else:
-                            print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
+                            print("{} out of {} row(s) selected".format(len(all_df), len(self.df)))
                     return all_df
                 else:
                     col_ind = self.df.head.index(_col_name)
                     for row_ind in self.indices():
                         self.df[row_ind][col_ind] = _value
+                    if verbose:
+                        if len(self.indices()) == 0:
+                            print(yellow("no row updated"))
+                        else:
+                            print("{} out of {} row(s) updated".format(len(self.indices()), len(self.df)))
                     return self.df
 
             def indices(self):
