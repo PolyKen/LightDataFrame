@@ -100,8 +100,8 @@ df = df_1 - df_2
 
 - map / apply function on column
 ```
-df.map("time", lambda dt: dt.split()[0])
-df.map("price", float)
+df.map(lambda dt: dt.split()[0], "time")
+df.map(float, "price")
 ```
 
 - save csv and append new content to existed csv file

@@ -46,13 +46,15 @@ class DataFrame(object):
             index = self.head.index(key)
             return [r[index] for r in self.rows]
         elif type(key) == int:
-            return self.rows[key]
+            df = self.empty()
+            df.append(self.rows[key].copy())
+            return df
         elif type(key) == list:
             if type(key[0]) == int:
-                lists = []
+                df = self.empty()
                 for ind in key:
-                    lists.append(self.rows[ind])
-                return lists
+                    df.append(self.rows[ind].copy())
+                return df
             elif type(key[0]) == str:
                 df = self.__class__(name=self.name, date=self.date, head=[], rows=[[] for _ in range(len(self))])
                 for col_name in key:
@@ -242,7 +244,7 @@ class DataFrame(object):
                 self.rows.append(row)
         return self
 
-    def map(self, column_name, func):
+    def map(self, func, column_name):
         if column_name not in self.head:
             raise KeyError
 
@@ -250,11 +252,21 @@ class DataFrame(object):
         return self
 
     def mean(self, column_name_or_row_index):
-        lst = self[column_name_or_row_index]
+        if column_name_or_row_index in self.head:
+            lst = self[column_name_or_row_index]
+        elif type(column_name_or_row_index) == int:
+            lst = self.rows[column_name_or_row_index]
+        else:
+            raise KeyError("not a column name or row index")
         return sum(lst) / len(lst)
 
     def variance(self, column_name_or_row_index):
-        lst = self[column_name_or_row_index]
+        if column_name_or_row_index in self.head:
+            lst = self[column_name_or_row_index]
+        elif type(column_name_or_row_index) == int:
+            lst = self.rows[column_name_or_row_index]
+        else:
+            raise KeyError("not a column name or row index")
         mean = self.mean(column_name_or_row_index)
         return sum(list(map(lambda x: (x - mean) ** 2, lst))) / len(lst)
 
@@ -330,7 +342,7 @@ class DataFrame(object):
                 else:
                     col_ind = self.df.head.index(_col_name)
                     for row_ind in self.indices():
-                        self.df[row_ind][col_ind] = _value
+                        self.df.rows[row_ind][col_ind] = _value
                     if verbose:
                         if len(self.indices()) == 0:
                             print(yellow("no row updated"))
