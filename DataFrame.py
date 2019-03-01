@@ -559,6 +559,25 @@ class DataFrame(object):
                 self.selected = selected_rows
                 return self
 
+            @detail
+            def function(self, func):
+                selected_rows = set()
+                discarded_rows = set()
+                ind = self.df.head.index(self.field)
+                for i in self.selected:
+                    r = self.df.rows[i]
+                    if func(r[ind]):
+                        selected_rows.add(i)
+                    else:
+                        discarded_rows.add(i)
+
+                if self.complement:
+                    selected_rows, discarded_rows = discarded_rows, selected_rows
+                    self.complement = False
+
+                self.selected = selected_rows
+                return self
+
             def count(self):
                 all_selected = self.selected.union(self.kept)
                 return len(all_selected)
