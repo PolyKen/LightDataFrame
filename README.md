@@ -23,7 +23,7 @@ df.select.where("settlement").equal("USD").where("price").greater(1000)().save_c
 
 ## Usage
 
-- import: 
+- import
 ```
 from DataFrame import DataFrame
 ```
@@ -40,12 +40,17 @@ matrix = [["Tom", 1987, 15], ["Jerry", 1993, 32]]
 df = DataFrame.read_matrix(head, matrix)
 ```
 
-- select / add / pop row
+- select / add / modify / pop row
 ```
-row = df[3]  # select 3rd row
-rows = df[[1,3,5,7,9]]  # select these 5 rows
+df_row = df[3]  # get a dataframe formed by the 4th row (return DataFrame)
+df_rows = df[[1,3,5,7,9]]  # get a dataframe formed by these 5 rows (return DataFrame)
+row = df.rows[2]  # get the third row (return list)
+d = df.dict(5)  # get the sixth row in the form of dict (return dict)
+dicts = df.dict()  # get all rows in the form of dict (return list)
 df.append(new_row)  # append new row
-df.pop(row_num)  # pop, equivalent to df.rows.pop(row_num)
+df.append({"col_1": 2, "col_2": 3})  # append new row in the form of dict
+df[0] = [34, "True", "Tony"]  # update the first row
+df.pop(row_num)  # pop, equivalent to df.rows.pop(row_num=None)
 ```
 
 - **select / add / modify column**
@@ -56,7 +61,7 @@ df["name"] = ["Mary", "Kevin"]  # replace whole column
 df["sex"] = ["F", "M"]  # add a new column
 ```
 
-- **query with conditions**
+- **query/update with conditions**
 
 ```
 # finding rows where age > 16, sex = "M"
@@ -72,6 +77,9 @@ df = df.select.where("release date").contain("2017").Or.contain("2018")()
 
 # finding rows where id don't have prefix "AHU", then print 20 results
 df.select.where("id").Not.prefix("AHU")().print(20)
+
+# update the "is_retired" field on condition that the "age" field is greater than 65
+df.update("is_retired", True).where("age").greater(65)()
 ```
 
 - sort by column
@@ -100,8 +108,8 @@ df = df_1 - df_2
 
 - map / apply function on column
 ```
-df.map("time", lambda dt: dt.split()[0])
-df.map("price", float)
+df.map(lambda dt: dt.split()[0], "time")
+df.map(float, "price")
 ```
 
 - save csv and append new content to existed csv file

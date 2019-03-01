@@ -37,5 +37,7 @@ if __name__ == "__main__":
     df.print()
     df.pop()
     df.update("date", "1997-04-21").where("person").equal("Kenny")().print(highlight_rows=2)
-    # df.save_csv("abc.csv")
-
+    print(df)
+    df[1].print()
+    df[1].dict(0)["person"] = "Ruby"
+    df[1].print()

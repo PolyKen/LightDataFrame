@@ -46,13 +46,15 @@ class DataFrame(object):
             index = self.head.index(key)
             return [r[index] for r in self.rows]
         elif type(key) == int:
-            return self.rows[key]
+            df = self.empty()
+            df.append(self.rows[key].copy())
+            return df
         elif type(key) == list:
             if type(key[0]) == int:
-                lists = []
+                df = self.empty()
                 for ind in key:
-                    lists.append(self.rows[ind])
-                return lists
+                    df.append(self.rows[ind].copy())
+                return df
             elif type(key[0]) == str:
                 df = self.__class__(name=self.name, date=self.date, head=[], rows=[[] for _ in range(len(self))])
                 for col_name in key:
@@ -191,9 +193,12 @@ class DataFrame(object):
     def pop(self, row_num=-1):
         return self.rows.pop(row_num)
 
-    def print(self, n=-1, highlight_rows=[]):
-        if type(highlight_rows) == int:
+    def print(self, n=-1, highlight_rows=None):
+        if highlight_rows is None:
+            highlight_rows = []
+        elif type(highlight_rows) == int:
             highlight_rows = [highlight_rows]
+
         if len(self.rows) == 0:
             print(green(join(self.head, "    ")))
         else:
@@ -239,7 +244,7 @@ class DataFrame(object):
                 self.rows.append(row)
         return self
 
-    def map(self, column_name, func):
+    def map(self, func, column_name):
         if column_name not in self.head:
             raise KeyError
 
@@ -247,11 +252,21 @@ class DataFrame(object):
         return self
 
     def mean(self, column_name_or_row_index):
-        lst = self[column_name_or_row_index]
+        if column_name_or_row_index in self.head:
+            lst = self[column_name_or_row_index]
+        elif type(column_name_or_row_index) == int:
+            lst = self.rows[column_name_or_row_index]
+        else:
+            raise KeyError("not a column name or row index")
         return sum(lst) / len(lst)
 
     def variance(self, column_name_or_row_index):
-        lst = self[column_name_or_row_index]
+        if column_name_or_row_index in self.head:
+            lst = self[column_name_or_row_index]
+        elif type(column_name_or_row_index) == int:
+            lst = self.rows[column_name_or_row_index]
+        else:
+            raise KeyError("not a column name or row index")
         mean = self.mean(column_name_or_row_index)
         return sum(list(map(lambda x: (x - mean) ** 2, lst))) / len(lst)
 
@@ -297,9 +312,9 @@ class DataFrame(object):
 
         class Filter(object):
             def __init__(self, df, field=None):
-                self.all_df = set(range(len(df.rows)))
+                self.all_df = set(range(len(df)))
                 self.kept = set()
-                self.selected = set(range(len(df.rows)))
+                self.selected = set(range(len(df)))
                 self.df = df
                 self.field = field
                 self.complement = False
@@ -319,15 +334,20 @@ class DataFrame(object):
                     for i in self.selected:
                         all_df.append(self.df.rows[i])
                     if verbose:
-                        if len(all_df.rows) == 0:
+                        if len(all_df) == 0:
                             print(yellow("no row selected"))
                         else:
-                            print("{} out of {} row(s) selected".format(len(all_df.rows), len(self.df.rows)))
+                            print("{} out of {} row(s) selected".format(len(all_df), len(self.df)))
                     return all_df
                 else:
                     col_ind = self.df.head.index(_col_name)
                     for row_ind in self.indices():
-                        self.df[row_ind][col_ind] = _value
+                        self.df.rows[row_ind][col_ind] = _value
+                    if verbose:
+                        if len(self.indices()) == 0:
+                            print(yellow("no row updated"))
+                        else:
+                            print("{} out of {} row(s) updated".format(len(self.indices()), len(self.df)))
                     return self.df
 
             def indices(self):
