@@ -195,7 +195,7 @@ class DataFrame(object):
         if type(highlight_rows) == int:
             highlight_rows = [highlight_rows]
         if len(self.rows) == 0:
-            print(green(join(self.head, "\t")))
+            print(green(join(self.head, "    ")))
         else:
             def get_col_width(lst):
                 return max(list(map(lambda x: len(str(x)), lst)))
