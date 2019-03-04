@@ -1,5 +1,5 @@
 from utils import join, yellow, green, timer, now
-from re import match, search
+from re import match, search, findall
 import random
 
 
@@ -120,6 +120,31 @@ class DataFrame(object):
         for row in self.rows:
             rows.append(row)
         return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
+
+    @staticmethod
+    def read_http_table(raw_string):
+        class HTMLString(str):
+            def restrip(self, pattern):
+                new_string = self
+                while search(pattern, new_string):
+                    start, end = search(pattern, new_string).span()
+                    new_string = new_string[0:start] + new_string[end:]
+                return HTMLString(new_string)
+
+        def parse_row(raw_row):
+            raw_columns = findall(r"<td.*?>.*?</td>", raw_row)
+            return list(map(lambda col: str(HTMLString(col).restrip(r"<td.*?>").restrip("</td>")), raw_columns))
+
+        raw_rows = findall(r"<tr.*?>.*?</tr>", raw_string)
+        if search("<thead.*?>", raw_string):
+            thead = HTMLString(search(r"<thead.*?>.*</thead>", raw_string).group())
+            head = parse_row(thead.restrip(r"<thead.*?>").restrip("</thead>"))
+            rows = list(map(parse_row, raw_rows))
+        else:
+            head = parse_row(raw_rows[0])
+            rows = list(map(parse_row, raw_rows[1:]))
+
+        return DataFrame(head=head, rows=rows)
 
     @staticmethod
     def read_dict(d, **kwargs):
