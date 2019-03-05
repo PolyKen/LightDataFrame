@@ -226,6 +226,7 @@ class DataFrame(object):
 
         if len(self.rows) == 0:
             print(green(join(self.head, "    ")))
+            print("(empty)")
         else:
             def get_col_width(lst):
                 return max(list(map(lambda x: len(str(x)), lst)))
