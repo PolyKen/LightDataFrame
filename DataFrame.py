@@ -118,7 +118,7 @@ class DataFrame(object):
     def copy(self):
         rows = []
         for row in self.rows:
-            rows.append(row)
+            rows.append(row.copy())
         return self.__class__(name=self.name, date=self.date, head=self.head.copy(), rows=rows)
 
     @staticmethod
