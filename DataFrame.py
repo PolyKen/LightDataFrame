@@ -137,7 +137,9 @@ class DataFrame(object):
 
         def parse_row(raw_row):
             raw_columns = findall(r"<td.*?>.*?</td>", raw_row)
-            return list(map(lambda col: str(HTMLString(col).restrip(r"<td.*?>").restrip("</td>")), raw_columns))
+            return list(map(lambda col: str(
+                HTMLString(col).restrip(r"<td.*?>").restrip("</td>").restrip(r"<font.*?>").restrip("</font>").restrip(
+                    "<b>").restrip("</b>")), raw_columns))
 
         raw_rows = findall(r"<tr.*?>.*?</tr>", raw_string)
         if search("<thead.*?>", raw_string):
@@ -231,6 +233,7 @@ class DataFrame(object):
         if len(self.rows) == 0:
             print(green(join(self.head, "    ")))
             print("(empty)")
+            print()
         else:
             def get_col_width(lst):
                 return max(list(map(lambda x: len(str(x)), lst)))
