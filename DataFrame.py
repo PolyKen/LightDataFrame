@@ -62,8 +62,12 @@ class DataFrame(object):
                     df[col_name] = [r[index] for r in self.rows]
                 return df
         else:
-            print("{}(type: {}) is not a column name or row index".format(key, type(key)))
-            raise KeyError
+            try:
+                rows = self.rows[key]
+                return self.__class__(name=self.name, date=self.date, head=self.head, rows=rows)
+            except Exception as e:
+                print("{}(type: {}) is not a column name or row index or slice".format(key, type(key)))
+                raise e
 
     def __setitem__(self, column_name_or_row_index, column_or_row):
         key = column_name_or_row_index
